@@ -103,6 +103,7 @@ def generate(filename):
     # Convert T_ij into matrix
     failed = 0
     tmat = []
+    maxT = max(max(dests.values()) for dests in T.values())
     for origin, dests in T.items():
         row = []
         for s in to_include:
@@ -111,7 +112,7 @@ def generate(filename):
                                for new_coord in map(add_coord(s), c.DELTAS)
                                if new_coord in dests]
                 if len(surrounding) == 0:
-                    row.append(c.INF_TRIP_TIME)
+                    row.append(maxT)
                     failed += 1
                 else:
                     row.append(np.mean(surrounding))
@@ -119,12 +120,12 @@ def generate(filename):
                 row.append(dests[s])
         tmat.append(row)
 
-
     mat['T'] = np.array(tmat)
     assert mat['T'].shape == (len(to_include), len(to_include)), \
       'Dimensions of T mismatch!'
 
-    print 'T generation: total={}, failed to match={}'.format( len(tmat) ** 2, failed)
+    print 'T generation: total={}, failed to match={}, maxT={}'\
+      .format( len(tmat) ** 2, failed, maxT)
 
     sio.savemat(filename, mat)
     print 'Saved as: ' + filename
