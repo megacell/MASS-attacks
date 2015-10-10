@@ -16,3 +16,5 @@ __pycache__
 
 # Project specific
 *.geojson
+big_query/data/*
+/big_query/queueing_params.mat
