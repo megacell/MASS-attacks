@@ -33,6 +33,6 @@ def constraints(sources, adjacency, N):
     b = matrix(np.concatenate((sources, -sources, np.zeros((N*N,)))))
     # build the constraint matrix
     I, J = np.where(adjacency)
-    adj = spmatrix(1., J, J + N*I, (3,9)) - spmatrix(1., I, J + N*I, (3,9))
+    adj = spmatrix(1., J, J + N*I, (N, N*N)) - spmatrix(1., I, J + N*I, (N, N*N))
     A = sparse([[adj, -adj, -spdiag([1.]*(N*N))]])
     return b, A

@@ -32,3 +32,8 @@ def generate_asymmetric():
     travel_times = 10. * np.ones((3,3))
     travel_times[range(3), range(3)] = 0.0
     return rates, routing, travel_times
+
+
+def is_equal(a, b, eps=10e-8):
+    # check if numpy arrays a and b are check_equal
+    return np.sum(abs(a - b)) < eps
