@@ -13,9 +13,10 @@ Running
 -------
 
 To run the Minimum Attack Program (MAP)
+
     python min_attack_solver.py
 
 Testing
 -------
 
-python -m unittest discover
+    python -m unittest discover
