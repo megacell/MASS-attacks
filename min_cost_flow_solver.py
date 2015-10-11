@@ -41,11 +41,18 @@ def constraints(sources, adjacency, N):
     return b, A
 
 
-def cplex_solver(coeff, source, adjacency):
-    open('tmp.lp', 'w').write(to_cplex_lp_file(coeff, source))
+def cplex_solver(coeff, sources, adjacency):
+    N = len(sources)
+    open('tmp.lp', 'w').write(to_cplex_lp_file(coeff, sources))
     variables, sols = cplex_interface.solve_from_file('tmp.lp', 'o')
-    import pdb; pdb.set_trace()
-    return sols
+    # reconstruct flow matrix from 'sols' returned by cplex solver 
+    non_zeros = np.where(sols)
+    flow = np.zeros((N,N))
+    for i in non_zeros[0]:
+        a,b = [int(j) for j in variables[i][2:].split('_')]
+        flow[a,b] = sols[i]
+    return flow
+
 
 def to_cplex_lp_file(coeff, sources):
     # generate input file for CPLEX solver
@@ -61,11 +68,11 @@ def to_cplex_lp_file(coeff, sources):
     for i in range(N):
         for j in range(i) + range(i+1, N):
             out = out + 'x_{}_{} - x_{}_{} + '.format(j, i, i, j)
-        out = out[:-2] + '= {}\n'.format(sources[i])
-    out = out + 'Bounds\n  '
+        out = out[:-2] + '= {}\n  '.format(sources[i])
     # bounds
+    out = out[:-2] + 'Bounds\n  '
     for i in range(N):
         for j in range(N):
-            out = out + '0 <= x_{}_{}\n'.format(i,j)
-    out = out + 'End'
+            out = out + '0 <= x_{}_{}\n  '.format(i,j)
+    out = out[:-2] + 'End'
     return out

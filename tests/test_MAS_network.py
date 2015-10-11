@@ -13,8 +13,7 @@ class TestMasNetwork(unittest.TestCase):
 
     def test_MAS_network(self):
         # test valid network
-        rates, routing, travel_times = generate_uniform()
-        network = MAS.Network(rates, routing, travel_times)
+        network = MAS.Network(*generate_uniform())
         network.check()
 
 
@@ -32,8 +31,7 @@ class TestMasNetwork(unittest.TestCase):
 
     def test_throughputs(self):
         # compute and check throughputs for uniform network
-        rates, routing, travel_times = generate_uniform()
-        network = MAS.Network(rates, routing, travel_times)
+        network = MAS.Network(*generate_uniform())
         # check throughputs
         self.assertTrue(is_equal(network.throughputs(), (1./3) * np.ones((3,))))
         # check availabilities
@@ -42,14 +40,12 @@ class TestMasNetwork(unittest.TestCase):
 
     def test_throughputs_2(self):
         # compute and check throughputs for asymmetric network
-        rates, routing, travel_times = generate_asymmetric()
-        network = MAS.Network(rates, routing, travel_times)
+        network = MAS.Network(*generate_asymmetric())
         self.assertTrue(is_equal(network.throughputs(), np.array([.25, .25, .5])))   
 
 
     def test_mean_travel_time(self):
-        rates, routing, travel_times = generate_uniform()
-        network = MAS.Network(rates, routing, travel_times)
+        network = MAS.Network(*generate_uniform())
         self.assertTrue(network.mean_travel_time == 20./3)
 
 
@@ -63,8 +59,7 @@ class TestMasNetwork(unittest.TestCase):
 
     def test_balance(self):
         # test if the balance strategy effectively balance the network
-        rates, routing, travel_times = generate_asymmetric()
-        network = MAS.Network(rates, routing, travel_times)
+        network = MAS.Network(*generate_asymmetric())
         tmp = np.array([.5, .5, 1.])
         self.assertTrue(is_equal(network.new_availabilities(), tmp))
         opt_rates, opt_routing = network.balance()
@@ -75,16 +70,14 @@ class TestMasNetwork(unittest.TestCase):
     def test_min_attack(self):
         # test if the attacks affectively achieve the target availabilities
         target = np.array([.25, .5, 1.])
-        rates, routing, travel_times = generate_asymmetric()
-        network = MAS.Network(rates, routing, travel_times)
+        network = MAS.Network(*generate_asymmetric())
         opt_rates, opt_routing = network.min_attack(target)
         self.assertTrue(is_equal(network.new_availabilities(), target))
 
 
     def test_routing_attack(self):
         # test if the routing of attacks works given fixed attack rates
-        rates, routing, travel_times = generate_uniform()
-        network = MAS.Network(rates, routing, travel_times)
+        network = MAS.Network(*generate_uniform())
         # attack rates are fixed
         attack_rates = np.array([1., 1., 1.])
         # find routing minimizing the weighted sum of availabilities
@@ -103,6 +96,18 @@ class TestMasNetwork(unittest.TestCase):
         #print network.new_availabilities()
 
 
+    def test_cplex_small(self):
+        network = MAS.Network(*generate_asymmetric())
+        tmp = np.array([.5, .5, 1.])
+        self.assertTrue(is_equal(network.new_availabilities(), tmp))
+        network.balance(cplex=True)
+        self.assertTrue(is_equal(network.new_availabilities(), np.ones((3,))))
+
+
+    def test_cplex_full(self):
+        network = MAS.load_network('data/queueing_params.mat')
+        network.balance(cplex=True)
+        self.assertTrue(is_equal(network.new_availabilities(), np.ones((network.size,))))
 
 
 if __name__ == '__main__':

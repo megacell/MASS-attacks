@@ -8,7 +8,7 @@ import numpy as np
 __author__ = 'jeromethai'
 
 
-def check_target_cost(target, cost, size, eps = 10e-8):
+def check_target_cost(target, cost, size, eps=10e-8):
     # check that the target is the right size and positive
     assert target.shape[0] == size
     assert np.max(target) == 1.0
@@ -20,7 +20,7 @@ def check_target_cost(target, cost, size, eps = 10e-8):
 
 
 
-def min_cost_flow_init(network, target, cost, eps = 10e-8):
+def min_cost_flow_init(network, target, cost, eps=10e-8):
     print 'initialize paramaters of the LP ...'
     # produce the casting into a min-cost flow problem
     # compute source terms
@@ -34,7 +34,7 @@ def min_cost_flow_init(network, target, cost, eps = 10e-8):
     return coeff, sources
 
 
-def flow_to_rates_routing(size, flow, target, eps = 10e-8):
+def flow_to_rates_routing(size, flow, target, eps=10e-8):
     # convert the flow solution of the min cost flow problem
     # back into rates
     # makes sure that the diagonal is equal to zero
@@ -53,7 +53,7 @@ def flow_to_rates_routing(size, flow, target, eps = 10e-8):
     return opt_rates, opt_routing
 
 
-def min_attack_solver(network, target, cost, eps = 10e-8, cplex=False):
+def min_attack_solver(network, target, cost, eps=10e-8, cplex=False):
     print 'start min_attack_solver ...'
     # initialize the parameters for the min-cost-flow problem
     # it returns that optimal rates and routing probabilities

@@ -82,16 +82,21 @@ def to_cplex_lp_file(network, attack_rates, k, eps = 10e-8):
             out = out + '{} y_{}_{} - '.format(attack_rates[j], j, i)
             out = out + '{} y_{}_{} + '.format(lam[i], i, j)
             out = out + '{} a_{} + '.format(tmp[i,j], j)
-        out = out[:-2] + '= 0.0\n'
+        out = out[:-2] + '= 0.0\n  '
     # constraints on the a_i
     for i in range(N):
         for j in range(i) + range(i+1, N):
             out = out + 'y_{}_{} + '.format(i,j)
         if i == k:
-            out = out[:-2] + '- 1.0 = 0\n'.format(i)
+            out = out[:-2] + '- 1.0 = 0\n  '.format(i)
         else:
-            out = out[:-2] + '- a_{} = 0\n'.format(i)
-    out = out + 'End'
+            out = out[:-2] + '- a_{} = 0\n  '.format(i)
+    # bounds
+    out = out[:-2] + 'Bounds\n  '
+    for i in range(N):
+        for j in range(i) + range(i+1, N):
+            out = out + '0 <= y_{}_{}\n  '.format(i,j)
+    out = out[:-2] + 'End'
     return out
 
 

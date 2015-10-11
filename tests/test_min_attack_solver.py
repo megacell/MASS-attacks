@@ -18,8 +18,7 @@ class TestMinAttackSolver(unittest.TestCase):
 
     def test_min_cost_flow_init(self):
         # generate asymmetric network
-        rates, routing, travel_times = generate_asymmetric()
-        network = MAS.Network(rates, routing, travel_times)
+        network = MAS.Network(*generate_asymmetric())
         # target for the availabilities
         target = np.array([.5, 1., 1.])
         # cost is uniform
@@ -52,8 +51,7 @@ class TestMinAttackSolver(unittest.TestCase):
 
     def test_min_attack_solver(self):
         # generate asymmetric network
-        rates, routing, travel_times = generate_asymmetric()
-        network = MAS.Network(rates, routing, travel_times)
+        network = MAS.Network(*generate_asymmetric())
         target = np.ones((3,))
         cost = np.ones((3,3))
         opt_rates, opt_routing = min_attack_solver(network, target, cost)
@@ -65,20 +63,13 @@ class TestMinAttackSolver(unittest.TestCase):
 
     def test_to_cplex_lp_file(self):
         # test if it generates the right string
-        rates, routing, travel_times = generate_asymmetric()
-        network = MAS.Network(rates, routing, travel_times)
+        network = MAS.Network(*generate_asymmetric())
         target = np.array([ 0.25, 0.5, 1.])
         cost = np.ones((3,3))
         coeff, sources = min_cost_flow_init(network, target, cost)
-        print to_cplex_lp_file(coeff, sources)
+        string = to_cplex_lp_file(coeff, sources)
+        # print string
 
-    def test_cplex_small(self):
-        network = MAS.Network(*generate_asymmetric())
-        network.balance(cplex=True)
-
-    def test_cplex_full(self):
-        network = MAS.load_network('data/queueing_params.mat')
-        network.balance(cplex=True)
 
 if __name__ == '__main__':
     unittest.main()

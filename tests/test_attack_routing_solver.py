@@ -50,7 +50,8 @@ class TestAttackRoutingSolver(unittest.TestCase):
         network = MAS.Network(rates, routing, travel_times)
         attack_rates = np.array([1., 1., 1.])
         k = 2
-        print to_cplex_lp_file(network, attack_rates, k)   
+        string = to_cplex_lp_file(network, attack_rates, k)
+        # print string
 
 
 if __name__ == '__main__':
