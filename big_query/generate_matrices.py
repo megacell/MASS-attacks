@@ -82,13 +82,21 @@ def generate(filename):
     # Convert p_ij into distribution and apply smoothing
     alpha = c.SMOOTHING_FACTOR
     pmat = []
-    for origin, dests in p.items():
-        total = sum(dests.values())
-        pmat.append([(dests.get(s, 0) + alpha)/float(total + len(to_include) * alpha)
-                     for s in to_include])
+    for origin in to_include:
+        dests = p[origin]
+        total = sum(dests.values()) - dests.get(origin, 0)
+        row = []
+        for s in to_include:
+            if s == origin:
+                # Remove diagonal
+                row.append(0)
+            else:
+                row.append((dests.get(s, 0) + alpha)/
+                           float(total + (len(to_include)-1) * alpha))
+        pmat.append(row)
 
-    for row in pmat:
-        assert np.isclose(sum(row), 1), '{} is not 1!'.format(sum(row))
+    for i, row in enumerate(pmat):
+        assert np.isclose(sum(row), 1, 1e-8), 'row{}: {} is not 1!'.format(i, sum(row))
 
     mat['p'] = np.array(pmat)
     assert mat['p'].shape == (len(to_include), len(to_include)), \

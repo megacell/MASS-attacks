@@ -34,6 +34,3 @@ SMOOTHING_FACTOR = 1
 
 # The delta coordinates used in smoothing of T
 DELTAS = [(i, j) for i in [-1,0,1] for j in [-1,0,1]]
-
-# Value to use for trip time if there are no trips between two stations
-INF_TRIP_TIME = 100000000
