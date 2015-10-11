@@ -50,4 +50,23 @@ def pi_2_a(throughputs, rates):
 
 def is_equal(a, b, eps=10e-8):
     # check if numpy arrays a and b are check_equal
-    return np.sum(abs(a - b)) < eps
+    res = np.sum(abs(a - b)) < eps
+    if not res:
+        print 'Not equal: ', a, b
+    return res
+
+def simplex_projection(v, z=1):
+    ''' Projects vector v of dimension n onto the n-dimensional simplex
+
+    Taken from: Efficient projections onto the l1 ball for learning in higher
+                dimensions, Duchi et.al.
+    '''
+    n = len(v)
+    mu = sorted(v, reverse=True)
+    musum = np.cumsum(mu)
+
+    rho = max([j for j in range(n) if mu[j] - 1.0/(j+1) * (musum[j] - z) > 0])
+    theta = 1.0/(rho + 1) * (sum(mu[i] for i in range(rho+1)) - z)
+
+    w = [max(vi - theta, 0) for vi in v]
+    return w
