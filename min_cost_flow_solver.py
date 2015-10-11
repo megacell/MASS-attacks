@@ -40,3 +40,8 @@ def constraints(sources, adjacency, N):
     A = sparse([[adj, -adj, spmatrix(-np.ones((N*N,)), range(N*N), range(N*N))]])
     return b, A
 
+
+
+def cplex_solver(coeff, source):
+    open('tmp.lp', 'w').write(to_cplex_lp_file(coeff, sources))
+    variables, sols = cplex_interface.solve_from_file('tmp.lp', 'o')

@@ -13,7 +13,7 @@ __author__ = 'jeromethai'
 
 
 class TestMinAttackSolver(unittest.TestCase):
-    
+
 
     def test_min_cost_flow_init(self):
         # generate asymmetric network
@@ -68,7 +68,8 @@ class TestMinAttackSolver(unittest.TestCase):
         network = MAS.Network(rates, routing, travel_times)
         target = np.array([ 0.25, 0.5, 1.])
         cost = np.ones((3,3))
-        print to_cplex_lp_file(network, target, cost)
+        coeff, sources = min_cost_flow_init(network, target, cost)
+        print to_cplex_lp_file(coeff, sources)
 
 
 if __name__ == '__main__':

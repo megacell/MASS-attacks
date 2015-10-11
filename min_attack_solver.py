@@ -1,7 +1,7 @@
 '''Min attack solver
 '''
 
-
+import cplex_interface
 import min_cost_flow_solver as mcf
 import numpy as np
 
@@ -17,7 +17,7 @@ def check_target_cost(target, cost, size, eps = 10e-8):
     assert cost.shape[0] == size
     assert cost.shape[1] == size
     assert np.min(cost) >= eps
-    
+
 
 
 def min_cost_flow_init(network, target, cost, eps = 10e-8):
@@ -53,21 +53,21 @@ def flow_to_rates_routing(size, flow, target, eps = 10e-8):
     return opt_rates, opt_routing
 
 
-def min_attack_solver(network, target, cost, eps = 10e-8):
+def min_attack_solver(network, target, cost, eps = 10e-8, cplex=False):
     print 'start min_attack_solver ...'
     # initialize the parameters for the min-cost-flow problem
     # it returns that optimal rates and routing probabilities
     coeff, sources = min_cost_flow_init(network, target, cost, eps)
     # runs the min-cost-flow problem
-    flow = mcf.solver(coeff, sources, network.adjacency)
+    solver = mcf.cplex_solver if cplex else mcf.solver
+    flow = solver(coeff, sources, network.adjacency)
     opt_rates, opt_routing = flow_to_rates_routing(network.size, flow, target, eps)
     return opt_rates, opt_routing
 
-
-def to_cplex_lp_file(network, target, cost, eps = 10e-8): 
+def to_cplex_lp_file(coeff, sources):
     # generate input file for CPLEX solver
     # http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
-    coeff, sources = min_cost_flow_init(network, target, cost, eps = 10e-8)
+
     N = len(sources)
     out = 'Minimize\n  obj: '
     for i in range(N):
@@ -85,8 +85,4 @@ def to_cplex_lp_file(network, target, cost, eps = 10e-8):
         for j in range(N):
             out = out + '0 <= x_{}_{}\n'.format(i,j)
     out = out + 'End'
-    return out
-
-
-
     return out

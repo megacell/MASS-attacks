@@ -38,8 +38,7 @@ import cplex
 from cplex.exceptions import CplexSolverError
 import sys
 
-def lpex2(filename, method):
-
+def solve_from_file(filename, method):
 
     c = cplex.Cplex(filename)
 
@@ -110,26 +109,24 @@ def lpex2(filename, method):
     # because we're querying the entire solution vector,
     # x = c.solution.get_values()
     # would have the same effect
-    for j in range(c.variables.get_num()):
-        print("Column %d: Value = %17.10g" % (j, x[j]))
-        if basis is not None:
-            if basis[j] == c.solution.basis.status.at_lower_bound:
-                print("  Nonbasic at lower bound")
-            elif basis[j] == c.solution.basis.status.basic:
-                print("  Basic")
-            elif basis[j] == c.solution.basis.status.at_upper_bound:
-                print("  Nonbasic at upper bound")
-            elif basis[j] == c.solution.basis.status.free_nonbasic:
-                print("  Superbasic, or free variable at zero")
-            else:
-                print("  Bad basis status")
+    # for j in range(c.variables.get_num()):
+    #     print("Column %d: Value = %17.10g" % (j, x[j]))
+    #     if basis is not None:
+    #         if basis[j] == c.solution.basis.status.at_lower_bound:
+    #             print("  Nonbasic at lower bound")
+    #         elif basis[j] == c.solution.basis.status.basic:
+    #             print("  Basic")
+    #         elif basis[j] == c.solution.basis.status.at_upper_bound:
+    #             print("  Nonbasic at upper bound")
+    #         elif basis[j] == c.solution.basis.status.free_nonbasic:
+    #             print("  Superbasic, or free variable at zero")
+    #         else:
+    #             print("  Bad basis status")
 
     infeas = c.solution.get_float_quality(c.solution.quality_metric.max_primal_infeasibility)
     print("Maximum bound violation = ", infeas)
 
-    print(c.variables.get_names(), c.solution.get_values())
-
-import sys
+    return c.variables.get_names(), c.solution.get_values()
 
 if __name__ == "__main__":
     if len(sys.argv) != 3 or sys.argv[2] not in ["o","p","d","b","h","s","c"]:
@@ -147,25 +144,3 @@ if __name__ == "__main__":
         print("             c concurrent")
         sys.exit(-1)
     lpex2(sys.argv[1], sys.argv[2])
-else:
-    prompt = """Enter the path to a file with .mps, .lp, or .sav
-extension, and a possible, additional .gz extension:
-The path must be entered as a string; e.g. "my_model.mps"\n """
-    fname = input(prompt)
-    prompt = """Enter the letter indicating what optimization method
-should be used:
-    o default
-    p primal simplex
-    d dual simplex
-    b barrier
-    h barrier with crossover
-    s sifting
-    c concurrent \n"""
-    o = "o"
-    p = "p"
-    d = "d"
-    b = "b"
-    h = "h"
-    s = "s"
-    c = "c"
-    lpex2(fname, input(prompt))
