@@ -57,7 +57,6 @@ def cplex_solver(coeff, sources, adjacency):
 def to_cplex_lp_file(coeff, sources):
     # generate input file for CPLEX solver
     # http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
-
     N = len(sources)
     out = 'Minimize\n  obj: '
     for i in range(N):

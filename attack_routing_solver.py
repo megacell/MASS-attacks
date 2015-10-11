@@ -1,23 +1,44 @@
 '''Attack routing solver
 '''
 
+
+import cplex_interface
 from cvxopt import matrix, spmatrix, sparse, spdiag, solvers
 import numpy as np
 
 __author__ = 'jeromethai'
 
 
-def attack_routing_solver(network, attack_rates, k, eps = 10e-8):
+def attack_routing_solver(network, attack_rates, k, eps=10e-8, cplex=False):
     # solver for the attack routing
     # attack_rates : fixed attack rates, solve for the availabilities and routing
     # weights      : weights for the availabilities in the objective
+    solver = cplex_solver if cplex else cvxopt_solver
+    flow = solver(network, attack_rates, k)
+    return flow_to_availabilities_routing(network.size, flow, attack_rates, eps)
+
+
+def cvxopt_solver(network, attack_rates, k):
     N = network.size
     c = matrix(np.repeat(network.weights, network.size))
     b, A = constraints(network, attack_rates, k)
     # lp solver here
     x = np.squeeze(solvers.lp(c,A,b)['x'])
-    flow = x.reshape((N, N))
-    return flow_to_availabilities_routing(N, flow, attack_rates, eps)
+    return x.reshape((N, N))
+
+
+def cplex_solver(network, attack_rates, k):
+    N = network.size
+    open('tmp.lp', 'w').write(to_cplex_lp_file(network, attack_rates, k))
+    variables, sols = cplex_interface.solve_from_file('tmp.lp', 'o')
+    # reconstruct flow matrix from 'sols' returned by cplex solver 
+    non_zeros = np.where(sols)
+    flow = np.zeros((N,N))
+    for i in non_zeros[0]:
+        if variables[i][0] == 'a': continue
+        a,b = [int(j) for j in variables[i][2:].split('_')]
+        flow[a,b] = sols[i]
+    return flow
 
 
 def constraints(network, attack_rates, k):
@@ -52,7 +73,7 @@ def constraints(network, attack_rates, k):
     return b, A
 
 
-def flow_to_availabilities_routing(size, flow, attack_rates, eps = 10e-8):
+def flow_to_availabilities_routing(size, flow, attack_rates, eps=10e-8):
     # convert the flow solution of the min cost flow problem back to 
     # availabilities and routing probabilities
     flow[range(size), range(size)] = 0.0
@@ -65,7 +86,7 @@ def flow_to_availabilities_routing(size, flow, attack_rates, eps = 10e-8):
     return avail, opt_routing
 
 
-def to_cplex_lp_file(network, attack_rates, k, eps = 10e-8):
+def to_cplex_lp_file(network, attack_rates, k):
     # generate input file for CPLEX solver
     # http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
     N = network.size
@@ -81,16 +102,16 @@ def to_cplex_lp_file(network, attack_rates, k, eps = 10e-8):
         for j in range(i) + range(i+1, N):
             out = out + '{} y_{}_{} - '.format(attack_rates[j], j, i)
             out = out + '{} y_{}_{} + '.format(lam[i], i, j)
-            out = out + '{} a_{} + '.format(tmp[i,j], j)
-        out = out[:-2] + '= 0.0\n  '
+            if j != k: out = out + '{} a_{} + '.format(tmp[i,j], j)
+        out = out[:-2] + '= - {}\n  '.format(tmp[i,k])
     # constraints on the a_i
     for i in range(N):
         for j in range(i) + range(i+1, N):
             out = out + 'y_{}_{} + '.format(i,j)
         if i == k:
-            out = out[:-2] + '- 1.0 = 0\n  '.format(i)
+            out = out[:-2] + '= 1.0\n  '.format(i)
         else:
-            out = out[:-2] + '- a_{} = 0\n  '.format(i)
+            out = out[:-2] + '- a_{} = 0.0\n  '.format(i)
     # bounds
     out = out[:-2] + 'Bounds\n  '
     for i in range(N):

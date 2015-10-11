@@ -36,7 +36,7 @@ class Network:
 
 
 
-    def check(self, eps = 10e-8):
+    def check(self, eps=10e-8):
         assert eps > 0., "eps too small"
 
         # check that dimensions match
@@ -71,7 +71,7 @@ class Network:
         assert np.sum(self.weights > eps) == self.size, 'weights not positive'
 
 
-    def throughputs(self, eps = 10e-8):
+    def throughputs(self, eps=10e-8):
         # get throughputs by solving the balanced equations
         eigenvalues, eigenvectors = np.linalg.eig(self.routing.transpose())
         index = np.argwhere(abs(eigenvalues - 1.0) < eps)[0][0]
@@ -79,7 +79,7 @@ class Network:
         return pi / np.sum(pi)
 
 
-    def new_throughputs(self, eps = 10e-8):
+    def new_throughputs(self, eps=10e-8):
         # get throughputs by solving the balanced equations
         eigenvalues, eigenvectors = np.linalg.eig(self.new_routing.transpose())
         index = np.argwhere(abs(eigenvalues - 1.0) < eps)[0][0]
@@ -87,19 +87,19 @@ class Network:
         return pi / np.sum(pi)
 
 
-    def availabilities(self, eps = 10e-8):
+    def availabilities(self, eps=10e-8):
         # get asymptotic availabilities at each station
         a = np.divide(self.throughputs(eps), self.rates)
         return a / np.max(a)
 
 
-    def new_availabilities(self, eps = 10e-8):
+    def new_availabilities(self, eps=10e-8):
         # get asymptotic availabilities at each station
         a = np.divide(self.new_throughputs(eps), self.new_rates)
         return a / np.max(a)
 
 
-    def balance(self, eps = 10e-8, cplex=False):
+    def balance(self, eps=10e-8, cplex=False):
         # balance the network as posed in Zhang2015
         target = np.ones((self.size,))
         # cost are travel times
@@ -133,14 +133,14 @@ class Network:
         self.new_routing = np.dot(np.diag(inverse_new_rates), tmp)
 
 
-    def opt_attack_routing(self, attack_rates, k, eps = 10e-8):
+    def opt_attack_routing(self, attack_rates, k, eps=10e-8, cplex=False):
         # given fixed attack_rates
         # find the best routing of attacks
         # to minimize the weighted sum of the availabilities
         assert len(attack_rates) == self.size, 'attack_rates wrong size'
         assert (k >= 0 and  k < self.size), 'index k is out of range'
         assert np.sum(attack_rates >= 0.0) == self.size, 'negative attack_rate'
-        a, routing = attack_routing_solver(self, attack_rates, k, eps)
+        a, routing = attack_routing_solver(self, attack_rates, k, eps, cplex)
         # update the network
         self.update(attack_rates, routing)
         return a, routing

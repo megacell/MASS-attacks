@@ -16,8 +16,7 @@ class TestAttackRoutingSolver(unittest.TestCase):
 
     def test_constraints(self):
         # generate asymmetric network with availabilities = [ 0.5  0.5  1. ]
-        rates, routing, travel_times = generate_asymmetric()
-        network = MAS.Network(rates, routing, travel_times)
+        network = MAS.Network(*generate_asymmetric())
         # an attack strategy that results in availabilities = [ 0.25  0.5   1. ]
         attack_rates = np.array([1., 0., 0.])
         attack_routing = np.array([[0., 0., 1.],[.5, 0., .5],[.5, .5, 0.]])
@@ -30,8 +29,7 @@ class TestAttackRoutingSolver(unittest.TestCase):
     def test_attack_routing_solver(self):
         # generate symmetric network with availabilities = [1., 1., 1.]
         # weight on the availabilities are [1., 1., 1.]
-        rates, routing, travel_times = generate_uniform()
-        network = MAS.Network(rates, routing, travel_times)
+        network = MAS.Network(*generate_uniform())
         # attack rates are fixed
         attack_rates = np.array([1., 1., 1.])
         # find routing minimizing the weighted weighted sum of availabilities
@@ -39,19 +37,27 @@ class TestAttackRoutingSolver(unittest.TestCase):
         k = 2 
         # get the availabilities 'a' and routing that led to 'a'
         a, routing = attack_routing_solver(network, attack_rates, k)
-        self.assertTrue(is_equal(a, np.array([2./3, 2./3, 1.])))
-        tmp = np.array([[0., 0., 1.], [0., 0., 1.], [.5, .5, 0.]])
-        self.assertTrue(is_equal(routing, tmp))
+        network.update(attack_rates, routing)
+        self.assertTrue(abs(np.sum(network.new_availabilities()) - 7./3))
 
 
     def test_to_cplex_lp_file(self):
         # same example as above
-        rates, routing, travel_times = generate_uniform()
-        network = MAS.Network(rates, routing, travel_times)
+        network = MAS.Network(*generate_uniform())
         attack_rates = np.array([1., 1., 1.])
         k = 2
         string = to_cplex_lp_file(network, attack_rates, k)
-        # print string
+        print string
+
+
+    def test_cplex_attack_routing_small_network(self):
+        # see test_attack_routing_solver() above for details on the example
+        network = MAS.Network(*generate_uniform())
+        attack_rates = np.array([1., 1., 1.])
+        k = 2
+        a, routing = attack_routing_solver(network, attack_rates, k, cplex=True)
+        network.update(attack_rates, routing)
+        self.assertTrue(abs(np.sum(network.new_availabilities()) - 7./3))
 
 
 if __name__ == '__main__':
