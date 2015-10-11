@@ -96,6 +96,14 @@ class TestMasNetwork(unittest.TestCase):
         self.assertTrue(is_equal(a, network.new_availabilities()))
 
 
+    def test_load_network(self):
+        network = MAS.load_network('data/queueing_params.mat')
+        a = network.new_availabilities()
+        #network.balance()
+        #print network.new_availabilities()
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

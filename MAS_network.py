@@ -4,6 +4,8 @@
 import numpy as np
 from min_attack_solver import min_attack_solver 
 from attack_routing_solver import attack_routing_solver
+import scipy.io
+from utils import is_equal
 
 __author__ = 'jeromethai'
 
@@ -30,7 +32,7 @@ class Network:
         self.new_rates = rates
         self.new_routing = routing
         # weights wuch that attacks minimize weighted sum of availabilities
-        self.weights = np.ones((self.size,))
+        self.weights=np.ones((self.size,))
 
 
 
@@ -48,7 +50,7 @@ class Network:
             "negative probabilities"
         assert np.sum(self.routing.diagonal()) == 0.0, \
             "diagonal of routing matrix not null"
-        assert np.sum(np.sum(self.routing, axis=1) == 1.0) == self.size, \
+        assert is_equal(np.sum(self.routing, axis=1), 1.0, eps), \
             "routing matrix are not probabilities"
 
         # make sure that the Jackson network is not ill-defined
@@ -73,7 +75,7 @@ class Network:
         # get throughputs by solving the balanced equations
         eigenvalues, eigenvectors = np.linalg.eig(self.routing.transpose())
         index = np.argwhere(abs(eigenvalues - 1.0) < eps)[0][0]
-        pi = eigenvectors[:, index]
+        pi = np.real(eigenvectors[:, index])
         return pi / np.sum(pi)
 
 
@@ -81,7 +83,7 @@ class Network:
         # get throughputs by solving the balanced equations
         eigenvalues, eigenvectors = np.linalg.eig(self.new_routing.transpose())
         index = np.argwhere(abs(eigenvalues - 1.0) < eps)[0][0]
-        pi = eigenvectors[:, index]
+        pi = np.real(eigenvectors[:, index])
         return pi / np.sum(pi)
 
 
@@ -144,8 +146,12 @@ class Network:
         return a, routing
 
 
-
-
+def load_network(file_path):
+    # generate MAS network from file
+    data = scipy.io.loadmat(file_path)
+    network = Network(np.squeeze(data['lam']), data['p'], data['T'])
+    network.check()
+    return network
 
 
 

@@ -21,6 +21,7 @@ def check_target_cost(target, cost, size, eps = 10e-8):
 
 
 def min_cost_flow_init(network, target, cost, eps = 10e-8):
+    print 'initialize paramaters of the LP ...'
     # produce the casting into a min-cost flow problem
     # compute source terms
     check_target_cost(target, cost, network.size)
@@ -53,6 +54,7 @@ def flow_to_rates_routing(size, flow, target, eps = 10e-8):
 
 
 def min_attack_solver(network, target, cost, eps = 10e-8):
+    print 'start min_attack_solver ...'
     # initialize the parameters for the min-cost-flow problem
     # it returns that optimal rates and routing probabilities
     coeff, sources = min_cost_flow_init(network, target, cost)
