@@ -20,3 +20,4 @@ __pycache__
 /big_query/queueing_params.mat
 data/*
 !data/.gitkeep
+*.lp

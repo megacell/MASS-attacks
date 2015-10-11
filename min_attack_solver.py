@@ -63,26 +63,3 @@ def min_attack_solver(network, target, cost, eps = 10e-8, cplex=False):
     flow = solver(coeff, sources, network.adjacency)
     opt_rates, opt_routing = flow_to_rates_routing(network.size, flow, target, eps)
     return opt_rates, opt_routing
-
-def to_cplex_lp_file(coeff, sources):
-    # generate input file for CPLEX solver
-    # http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
-
-    N = len(sources)
-    out = 'Minimize\n  obj: '
-    for i in range(N):
-        for j in range(N):
-            out = out + '{} x_{}_{} + '.format(coeff[i,j], i, j)
-    out = out[:-3] + '\nSubject To\n  '
-    # equality constraints
-    for i in range(N):
-        for j in range(i) + range(i+1, N):
-            out = out + 'x_{}_{} - x_{}_{} + '.format(j, i, i, j)
-        out = out[:-2] + '= {}\n'.format(sources[i])
-    out = out + 'Bounds\n  '
-    # bounds
-    for i in range(N):
-        for j in range(N):
-            out = out + '0 <= x_{}_{}\n'.format(i,j)
-    out = out + 'End'
-    return out
