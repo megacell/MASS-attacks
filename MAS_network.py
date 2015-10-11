@@ -5,7 +5,7 @@ import numpy as np
 from min_attack_solver import MinAttackSolver
 from attack_routing_solver import AttackRoutingSolver
 import scipy.io
-from utils import is_equal
+from utils import is_equal, pi_2_a, r_2_pi
 
 __author__ = 'jeromethai'
 
@@ -71,31 +71,23 @@ class Network:
 
 
     def throughputs(self, eps=10e-8):
-        # get throughputs by solving the balanced equations
-        eigenvalues, eigenvectors = np.linalg.eig(self.routing.transpose())
-        index = np.argwhere(abs(eigenvalues - 1.0) < eps)[0][0]
-        pi = np.real(eigenvectors[:, index])
-        return pi / np.sum(pi)
+        # get throughputs by solving the balanced equations before attacks
+        return r_2_pi(self.routing, eps)
 
 
     def new_throughputs(self, eps=10e-8):
-        # get throughputs by solving the balanced equations
-        eigenvalues, eigenvectors = np.linalg.eig(self.new_routing.transpose())
-        index = np.argwhere(abs(eigenvalues - 1.0) < eps)[0][0]
-        pi = np.real(eigenvectors[:, index])
-        return pi / np.sum(pi)
+        # get throughputs by solving the balanced equations after attacks
+        return r_2_pi(self.new_routing, eps)
 
 
     def availabilities(self, eps=10e-8):
-        # get asymptotic availabilities at each station
-        a = np.divide(self.throughputs(eps), self.rates)
-        return a / np.max(a)
+        # get asymptotic availabilities at each station before the attacks
+        return pi_2_a(self.throughputs(eps), self.rates)
 
 
     def new_availabilities(self, eps=10e-8):
-        # get asymptotic availabilities at each station
-        a = np.divide(self.new_throughputs(eps), self.new_rates)
-        return a / np.max(a)
+        # get asymptotic availabilities at each station after the attacks
+        return pi_2_a(self.new_throughputs(eps), self.new_rates)
 
 
     def balance(self, eps=10e-8, cplex=False):
@@ -122,13 +114,14 @@ class Network:
         return opt_rates, opt_routing
 
 
-    def update(self, rates, routing):
+    def update(self, attack_rates, attack_routing):
         # update new_rates and new_routing given attack rates and routing
-        self.attack_rates = rates
-        self.attack_routing = routing
-        self.new_rates = self.rates + rates
-        tmp = np.dot(np.diag(rates), routing) + np.dot(np.diag(self.rates), self.routing)
-        inverse_new_rates = np.divide(np.ones(self.size,), self.new_rates)
+        self.attack_rates = attack_rates
+        self.attack_routing = attack_routing
+        self.new_rates = self.rates + attack_rates
+        tmp = np.dot(np.diag(attack_rates), attack_routing) + \
+            np.dot(np.diag(self.rates), self.routing)
+        inverse_new_rates = np.divide(np.ones((self.size,)), self.new_rates)
         self.new_routing = np.dot(np.diag(inverse_new_rates), tmp)
 
 

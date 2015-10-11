@@ -1,4 +1,5 @@
-'''Tests for the min_attack_solver
+'''
+Tests for the min_attack_solver
 '''
 
 import unittest
