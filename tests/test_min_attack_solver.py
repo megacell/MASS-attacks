@@ -4,8 +4,7 @@
 import unittest
 import numpy as np
 from utils import generate_uniform, generate_asymmetric, is_equal
-from min_attack_solver import min_cost_flow_init, flow_to_rates_routing, \
-    min_attack_solver
+from min_attack_solver import MinAttackSolver
 from min_cost_flow_solver import to_cplex_lp_file
 import MAS_network as MAS
 
@@ -23,7 +22,7 @@ class TestMinAttackSolver(unittest.TestCase):
         target = np.array([.5, 1., 1.])
         # cost is uniform
         cost = np.ones((3,3))
-        coeff, sources = min_cost_flow_init(network, target, cost)
+        coeff, sources = MinAttackSolver(network, target, cost).min_cost_flow_init()
         # check coefficients
         tmp = np.ones((3,3))
         tmp[0,:] = np.array([2., 2., 2.])
@@ -33,19 +32,20 @@ class TestMinAttackSolver(unittest.TestCase):
 
 
     def test_flow_to_rates_routing(self):
-        size = 3
+        network = MAS.Network(*generate_asymmetric())
         flow = np.zeros((3, 3))
         flow[0,1] = .25
         flow[0,2] = .25
         flow[1,0] = .5
         flow[1,2] = .5
+        cost = np.ones((3,3))
         target = np.array([.5, 1., 1.])
-        rates, routing = flow_to_rates_routing(size, flow, target)
+        rates, routing = MinAttackSolver(network, target, cost).flow_to_rates_routing(flow)
         # check rates
         self.assertTrue(is_equal(rates, np.array([1., 1., 0.])))
         # check routing
-        tmp = .5 * np.ones((size, size))
-        tmp[range(size), range(size)] = 0.0
+        tmp = .5 * np.ones((3, 3))
+        tmp[range(3), range(3)] = 0.0
         self.assertTrue(is_equal(routing, tmp))
 
 
@@ -54,7 +54,7 @@ class TestMinAttackSolver(unittest.TestCase):
         network = MAS.Network(*generate_asymmetric())
         target = np.ones((3,))
         cost = np.ones((3,3))
-        opt_rates, opt_routing = min_attack_solver(network, target, cost)
+        opt_rates, opt_routing = MinAttackSolver(network, target, cost).solve()
         self.assertTrue(is_equal(opt_rates, np.array([0.,0.,1.])))
         tmp = .5 * np.ones((3, 3))
         tmp[range(3), range(3)] = 0.0
@@ -66,7 +66,7 @@ class TestMinAttackSolver(unittest.TestCase):
         network = MAS.Network(*generate_asymmetric())
         target = np.array([ 0.25, 0.5, 1.])
         cost = np.ones((3,3))
-        coeff, sources = min_cost_flow_init(network, target, cost)
+        coeff, sources = MinAttackSolver(network, target, cost).min_cost_flow_init()
         string = to_cplex_lp_file(coeff, sources)
         # print string
 

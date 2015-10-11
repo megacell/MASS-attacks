@@ -6,7 +6,7 @@ import unittest
 from utils import generate_uniform, generate_asymmetric, is_equal
 import MAS_network as MAS
 import numpy as np
-from attack_routing_solver import constraints, attack_routing_solver, to_cplex_lp_file
+from attack_routing_solver import AttackRoutingSolver
 
 
 __author__ = 'jeromethai'
@@ -23,7 +23,7 @@ class TestAttackRoutingSolver(unittest.TestCase):
         network.update(attack_rates, attack_routing)
         # fix the availability at station 2 to be equal to 1
         k = 2
-        b, A = constraints(network, attack_rates, k)
+        b, A = AttackRoutingSolver(network, attack_rates, k).constraints()
    
 
     def test_attack_routing_solver(self):
@@ -36,7 +36,7 @@ class TestAttackRoutingSolver(unittest.TestCase):
         # fix the availability at station 2 to be equal to 1
         k = 2 
         # get the availabilities 'a' and routing that led to 'a'
-        a, routing = attack_routing_solver(network, attack_rates, k)
+        a, routing = AttackRoutingSolver(network, attack_rates, k).solve()
         network.update(attack_rates, routing)
         self.assertTrue(abs(np.sum(network.new_availabilities()) - 7./3))
 
@@ -46,7 +46,7 @@ class TestAttackRoutingSolver(unittest.TestCase):
         network = MAS.Network(*generate_uniform())
         attack_rates = np.array([1., 1., 1.])
         k = 2
-        string = to_cplex_lp_file(network, attack_rates, k)
+        string = AttackRoutingSolver(network, attack_rates, k).to_cplex_lp_file()
         print string
 
 
@@ -55,7 +55,7 @@ class TestAttackRoutingSolver(unittest.TestCase):
         network = MAS.Network(*generate_uniform())
         attack_rates = np.array([1., 1., 1.])
         k = 2
-        a, routing = attack_routing_solver(network, attack_rates, k, cplex=True)
+        a, routing = AttackRoutingSolver(network, attack_rates, k, cplex=True).solve()
         network.update(attack_rates, routing)
         self.assertTrue(abs(np.sum(network.new_availabilities()) - 7./3))
 

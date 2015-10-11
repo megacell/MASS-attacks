@@ -2,8 +2,8 @@
 '''
 
 import numpy as np
-from min_attack_solver import min_attack_solver
-from attack_routing_solver import attack_routing_solver
+from min_attack_solver import MinAttackSolver
+from attack_routing_solver import AttackRoutingSolver
 import scipy.io
 from utils import is_equal
 
@@ -46,15 +46,14 @@ class Network:
             "sizes of rates and travel_times don't match"
 
         # check that we have probabilities for routing
-        assert np.sum(self.routing >= 0.0) == self.size * self.size, \
-            "negative probabilities"
+        assert np.min(self.routing) >= 0.0, "negative probabilities"
         assert np.sum(self.routing.diagonal()) == 0.0, \
             "diagonal of routing matrix not null"
         assert is_equal(np.sum(self.routing, axis=1), 1.0, eps), \
             "routing matrix are not probabilities"
 
         # make sure that the Jackson network is not ill-defined
-        assert np.sum(self.rates > eps) == self.size, "rates too small"
+        assert np.min(self.rates) > eps, "rates too small"
         assert float(np.min(self.rates)) / np.max(self.rates) > eps, \
             "ratio min(rates) / max(rates) too small"
 
@@ -106,7 +105,7 @@ class Network:
         cost = self.travel_times
         # modify cost so that the problem is bounded
         cost[range(self.size), range(self.size)] = self.mean_travel_time
-        opt_rates, opt_routing = min_attack_solver(self, target, cost, eps, cplex)
+        opt_rates, opt_routing = MinAttackSolver(self, target, cost, eps, cplex).solve()
         # update the network
         self.update(opt_rates, opt_routing)
         return opt_rates, opt_routing
@@ -117,7 +116,7 @@ class Network:
         assert np.max(target) == 1.0, 'max(target) > 1.0'
         assert np.min(target) >= eps, 'target not positive'
         cost = np.ones((self.size, self.size))
-        opt_rates, opt_routing = min_attack_solver(self, target, cost, eps, cplex)
+        opt_rates, opt_routing = MinAttackSolver(self, target, cost, eps, cplex).solve()
         # update the network
         self.update(opt_rates, opt_routing)
         return opt_rates, opt_routing
@@ -140,7 +139,7 @@ class Network:
         assert len(attack_rates) == self.size, 'attack_rates wrong size'
         assert (k >= 0 and  k < self.size), 'index k is out of range'
         assert np.sum(attack_rates >= 0.0) == self.size, 'negative attack_rate'
-        a, routing = attack_routing_solver(self, attack_rates, k, eps, cplex)
+        a, routing = AttackRoutingSolver(self, attack_rates, k, eps, cplex).solve()
         # update the network
         self.update(attack_rates, routing)
         return a, routing
