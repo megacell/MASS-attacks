@@ -4,7 +4,7 @@ We refer to the following tutorial: http://cvxopt.org/examples/tutorial/lp.html
 '''
 
 
-
+import cplex_interface
 from cvxopt import matrix, spmatrix, sparse, solvers, spdiag
 import numpy as np
 
@@ -40,3 +40,32 @@ def constraints(sources, adjacency, N):
     A = sparse([[adj, -adj, spmatrix(-np.ones((N*N,)), range(N*N), range(N*N))]])
     return b, A
 
+
+def cplex_solver(coeff, source, adjacency):
+    open('tmp.lp', 'w').write(to_cplex_lp_file(coeff, source))
+    variables, sols = cplex_interface.solve_from_file('tmp.lp', 'o')
+    import pdb; pdb.set_trace()
+    return sols
+
+def to_cplex_lp_file(coeff, sources):
+    # generate input file for CPLEX solver
+    # http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
+
+    N = len(sources)
+    out = 'Minimize\n  obj: '
+    for i in range(N):
+        for j in range(N):
+            out = out + '{} x_{}_{} + '.format(coeff[i,j], i, j)
+    out = out[:-3] + '\nSubject To\n  '
+    # equality constraints
+    for i in range(N):
+        for j in range(i) + range(i+1, N):
+            out = out + 'x_{}_{} - x_{}_{} + '.format(j, i, i, j)
+        out = out[:-2] + '= {}\n'.format(sources[i])
+    out = out + 'Bounds\n  '
+    # bounds
+    for i in range(N):
+        for j in range(N):
+            out = out + '0 <= x_{}_{}\n'.format(i,j)
+    out = out + 'End'
+    return out

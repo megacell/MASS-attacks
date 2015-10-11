@@ -5,7 +5,8 @@ import unittest
 import numpy as np
 from utils import generate_uniform, generate_asymmetric, is_equal
 from min_attack_solver import min_cost_flow_init, flow_to_rates_routing, \
-    min_attack_solver, to_cplex_lp_file
+    min_attack_solver
+from min_cost_flow_solver import to_cplex_lp_file
 import MAS_network as MAS
 
 
@@ -13,7 +14,7 @@ __author__ = 'jeromethai'
 
 
 class TestMinAttackSolver(unittest.TestCase):
-    
+
 
     def test_min_cost_flow_init(self):
         # generate asymmetric network
@@ -68,9 +69,16 @@ class TestMinAttackSolver(unittest.TestCase):
         network = MAS.Network(rates, routing, travel_times)
         target = np.array([ 0.25, 0.5, 1.])
         cost = np.ones((3,3))
-        opt_rates, opt_routing = min_attack_solver(network, target, cost)
-        print to_cplex_lp_file(network, target, cost)
+        coeff, sources = min_cost_flow_init(network, target, cost)
+        print to_cplex_lp_file(coeff, sources)
 
+    def test_cplex_small(self):
+        network = MAS.Network(*generate_asymmetric())
+        network.balance(cplex=True)
+
+    def test_cplex_full(self):
+        network = MAS.load_network('data/queueing_params.mat')
+        network.balance(cplex=True)
 
 if __name__ == '__main__':
     unittest.main()
