@@ -25,8 +25,6 @@ def solver(coeff, sources, adjacency):
     # build constraints
     b, A = constraints(sources, adjacency, N)
     # lp solver here
-    print b.size
-    print A.size
     print 'start iterations of the LP'
     x = np.squeeze(solvers.lp(c,A,b)['x'])
     return x.reshape((N, N))
@@ -37,10 +35,8 @@ def constraints(sources, adjacency, N):
     # build the constraint matrix for the problem
     b = matrix(np.concatenate((sources, -sources, np.zeros((N*N,)))))
     # build the constraint matrix
-    print 'get adjacency matrix ...'
     I, J = np.where(adjacency)
-    print 'construct adjacency constraints ...'
     adj = spmatrix(1., J, J + N*I, (N, N*N)) - spmatrix(1., I, J + N*I, (N, N*N))
-    print 'build constraint matrix ...'
     A = sparse([[adj, -adj, spmatrix(-np.ones((N*N,)), range(N*N), range(N*N))]])
     return b, A
+

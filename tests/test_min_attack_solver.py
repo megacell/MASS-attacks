@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 from utils import generate_uniform, generate_asymmetric, is_equal
 from min_attack_solver import min_cost_flow_init, flow_to_rates_routing, \
-    min_attack_solver
+    min_attack_solver, to_cplex_lp_file
 import MAS_network as MAS
 
 
@@ -60,6 +60,15 @@ class TestMinAttackSolver(unittest.TestCase):
         tmp = .5 * np.ones((3, 3))
         tmp[range(3), range(3)] = 0.0
         self.assertTrue(is_equal(opt_routing, tmp))
+
+
+    def test_to_cplex_lp_file(self):
+        # test if it generates the right string
+        rates, routing, travel_times = generate_asymmetric()
+        network = MAS.Network(rates, routing, travel_times)
+        target = np.array([ 0.25, 0.5, 1.])
+        cost = np.ones((3,3))
+        print to_cplex_lp_file(network, target, cost)
 
 
 if __name__ == '__main__':
