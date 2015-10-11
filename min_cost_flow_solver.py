@@ -42,9 +42,5 @@ def constraints(sources, adjacency, N):
     print 'construct adjacency constraints ...'
     adj = spmatrix(1., J, J + N*I, (N, N*N)) - spmatrix(1., I, J + N*I, (N, N*N))
     print 'build constraint matrix ...'
-    tmp = sparse([[adj, -adj]])
-    print 'still building the constraint matrix ...'
-    D = spmatrix(-np.ones((N*N,)), range(N*N), range(N*N))
-    print 'finish building the constraint matrix ...'
-    A = sparse([[tmp, D]])
+    A = sparse([[adj, -adj, spmatrix(-np.ones((N*N,)), range(N*N), range(N*N))]])
     return b, A
