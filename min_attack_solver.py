@@ -86,7 +86,3 @@ def to_cplex_lp_file(network, target, cost, eps = 10e-8):
             out = out + '0 <= x_{}_{}\n'.format(i,j)
     out = out + 'End'
     return out
-
-
-
-    return out

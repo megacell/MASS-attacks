@@ -68,6 +68,7 @@ class TestMinAttackSolver(unittest.TestCase):
         network = MAS.Network(rates, routing, travel_times)
         target = np.array([ 0.25, 0.5, 1.])
         cost = np.ones((3,3))
+        opt_rates, opt_routing = min_attack_solver(network, target, cost)
         print to_cplex_lp_file(network, target, cost)
 
 

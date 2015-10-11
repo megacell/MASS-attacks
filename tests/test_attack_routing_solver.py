@@ -6,7 +6,7 @@ import unittest
 from utils import generate_uniform, generate_asymmetric, is_equal
 import MAS_network as MAS
 import numpy as np
-from attack_routing_solver import constraints, attack_routing_solver
+from attack_routing_solver import constraints, attack_routing_solver, to_cplex_lp_file
 
 
 __author__ = 'jeromethai'
@@ -42,6 +42,15 @@ class TestAttackRoutingSolver(unittest.TestCase):
         self.assertTrue(is_equal(a, np.array([2./3, 2./3, 1.])))
         tmp = np.array([[0., 0., 1.], [0., 0., 1.], [.5, .5, 0.]])
         self.assertTrue(is_equal(routing, tmp))
+
+
+    def test_to_cplex_lp_file(self):
+        # same example as above
+        rates, routing, travel_times = generate_uniform()
+        network = MAS.Network(rates, routing, travel_times)
+        attack_rates = np.array([1., 1., 1.])
+        k = 2
+        print to_cplex_lp_file(network, attack_rates, k)   
 
 
 if __name__ == '__main__':

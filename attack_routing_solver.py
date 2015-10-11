@@ -65,3 +65,33 @@ def flow_to_availabilities_routing(size, flow, attack_rates, eps = 10e-8):
     return avail, opt_routing
 
 
+def to_cplex_lp_file(network, attack_rates, k, eps = 10e-8):
+    # generate input file for CPLEX solver
+    # http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
+    N = network.size
+    w = network.weights
+    lam = network.rates + attack_rates
+    tmp = np.dot(np.diag(network.rates), network.routing).transpose()
+    out = 'Minimize\n  obj: '
+    for i in range(k) + range(k+1, N):
+        out = out + '{} a_{} + '.format(w[i], i)
+    out = out[:-3] + '\nSubject To\n  '
+    # equality constraints
+    for i in range(k) + range(k+1, N):
+        for j in range(i) + range(i+1, N):
+            out = out + '{} y_{}_{} - '.format(attack_rates[j], j, i)
+            out = out + '{} y_{}_{} + '.format(lam[i], i, j)
+            out = out + '{} a_{} + '.format(tmp[i,j], j)
+        out = out[:-2] + '= 0.0\n'
+    # constraints on the a_i
+    for i in range(N):
+        for j in range(i) + range(i+1, N):
+            out = out + 'y_{}_{} + '.format(i,j)
+        if i == k:
+            out = out[:-2] + '- 1.0 = 0\n'.format(i)
+        else:
+            out = out[:-2] + '- a_{} = 0\n'.format(i)
+    out = out + 'End'
+    return out
+
+
