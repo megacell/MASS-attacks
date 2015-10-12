@@ -196,6 +196,21 @@ class TestMasNetwork(unittest.TestCase):
         network = MAS.load_network('data/queueing_params_with_adjacency.mat')
         self.assertTrue(np.sum(network.adjacency) / (network.size * network.size) < 4.)
 
+    def test_adjacencies(self):
+        network = MAS.Network(*generate_uniform(4))
+        reachable_1 = np.array([[0, 1, 1, 0],
+                                [1, 0, 0, 1],
+                                [1, 0, 0, 1],
+                                [0, 1, 1, 0]])
+        reachable_2 = np.array([[0, 1, 1, 1],
+                                [1, 0, 1, 1],
+                                [1, 1, 0, 1],
+                                [1, 1, 1, 0]])
+        network.adjacency = reachable_1
+        self.assertTrue(is_equal(reachable_1.flatten(),
+                                 network.get_adjacencies(1).flatten()))
+        self.assertTrue(is_equal(reachable_2.flatten(),
+                                 network.get_adjacencies(2).flatten()))
 
 if __name__ == '__main__':
     unittest.main()

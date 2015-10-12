@@ -4,16 +4,16 @@ import numpy as np
 __author__ = 'jeromethai'
 
 
-def generate_uniform():
+def generate_uniform(n=3):
     # generate small uniform network attributes
     # rates = 1 everywhere
     # routing is uniform
     # travel_times = 10 everywhere
-    rates = 1. * np.ones((3,))
-    routing = .5 * np.ones((3,3))
-    routing[range(3), range(3)] = 0.0
-    travel_times = 10. * np.ones((3,3))
-    travel_times[range(3), range(3)] = 0.0
+    rates = 1. * np.ones((n,))
+    routing = .5 * np.ones((n,n))
+    routing[range(n), range(n)] = 0.0
+    travel_times = 10. * np.ones((n,n))
+    travel_times[range(n), range(n)] = 0.0
     return rates, routing, travel_times
 
 
@@ -71,3 +71,12 @@ def simplex_projection(v, z=1):
     w = [max(vi - theta, 0) for vi in v]
     return np.array(w)
 
+
+def norm_adjacencies(mat):
+    # Rescale each non-zero entry in the adjacency matrix to 1 and put zeros
+    # on the diagonal
+    x, y = mat.shape
+    assert x == y, 'Matrix is not square!'
+    assert np.min(mat) >= 0, 'Matrix has negative entries!'
+    mat[mat > 0] = 1
+    mat[range(x), range(y)] = 0.0
