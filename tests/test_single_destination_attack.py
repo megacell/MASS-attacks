@@ -19,16 +19,21 @@ class TestSingleDestinationAttack(unittest.TestCase):
         # generate asymmetric MAS_network with availabilities [0.5  0.5  1.0]
         # and attack on station 2 with budget = 1.0 (default)
         network = MAS.Network(*generate_asymmetric())
-        attack_rates, attack_routing = SingleDestinationAttack(network, 2).apply()
+        sol = SingleDestinationAttack(network, 2).apply()
+        attack_rates, attack_routing = sol['attack_rates'], sol['attack_routing']
         network.update(attack_rates, attack_routing)
         self.assertTrue(is_equal(network.new_availabilities(), np.array([1./3, 1./3, 1.])))
+        self.assertTrue(is_equal(sol['alpha'], 1.5))
         # now attack on station 1
-        attack_rates, attack_routing = SingleDestinationAttack(network, 1).apply()
+        sol = SingleDestinationAttack(network, 1).apply()
+        attack_rates, attack_routing = sol['attack_rates'], sol['attack_routing']
         network.update(attack_rates, attack_routing)
         self.assertTrue(is_equal(network.new_availabilities(), np.array([1./3, 1., 2./3])))
+        self.assertTrue(is_equal(sol['alpha'], 1.5))
         # now attack on station 1 with 0.49 budget -> inefficient attack
         network.budget = 0.49
-        attack_rates, attack_routing = SingleDestinationAttack(network, 1).apply()
+        sol = SingleDestinationAttack(network, 1).apply()
+        attack_rates, attack_routing = sol['attack_rates'], sol['attack_routing']
         network.update(attack_rates, attack_routing)
         self.assertTrue(is_equal(network.new_availabilities(), np.array([.5, .5, 1.])))        
 

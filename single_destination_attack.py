@@ -31,15 +31,15 @@ class SingleDestinationAttack:
         # apply the policy and returns attack_rates and attack_routing
         self.a = self.network.availabilities()
         tmp = np.sum(np.divide(self.delta[self.k,:], self.a))
-        #print 'min_b', (1. - self.a[self.k]) * self.phi[self.k] * tmp
-        #print 'b', self.b
-        if (self.b < ((1. - self.a[self.k]) * self.phi[self.k] * tmp)):
+        if self.b < (1. - self.a[self.k]) * self.phi[self.k] * tmp:
             # inefficient attack, hence attack_rates = 0
-            print 'innefficient attacks'
-            return np.zeros((self.N,)), self.kappa
+            attack_rates, alpha = np.zeros((self.N,)), -1.0
         else:
             # efficient attack
-            return (self.b/tmp) * np.divide(self.delta[self.k,:], self.a), self.kappa
+            attack_rates = (self.b/tmp) * np.divide(self.delta[self.k,:], self.a)
+            alpha = self.a[self.k] + self.b / (self.phi[self.k] * tmp)
+        return {'attack_rates': attack_rates, 'attack_routing': self.kappa, \
+                'alpha': alpha}
 
 
 

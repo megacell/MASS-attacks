@@ -31,7 +31,7 @@ class Network:
         # attack rates and routing
         self.attack_rates = None
         self.attack_routing = None
-        # rates and routing after the attacks
+        # combined rates and routing after the attacks
         self.new_rates = rates
         self.new_routing = routing
         # weights wuch that attacks minimize weighted sum of availabilities
@@ -39,7 +39,7 @@ class Network:
         # budget for the attacks
         self.budget = 1.0
 
-    def check(self, eps=10e-8):
+    def check(self, eps=1e-8):
         assert eps > 0., "eps too small"
 
         # check that dimensions match
@@ -80,27 +80,27 @@ class Network:
         self.check()
 
 
-    def throughputs(self, eps=10e-8):
+    def throughputs(self, eps=1e-8):
         # get throughputs by solving the balanced equations before attacks
         return r_2_pi(self.routing, eps)
 
 
-    def new_throughputs(self, eps=10e-8):
+    def new_throughputs(self, eps=1e-8):
         # get throughputs by solving the balanced equations after attacks
         return r_2_pi(self.new_routing, eps)
 
 
-    def availabilities(self, eps=10e-8):
+    def availabilities(self, eps=1e-8):
         # get asymptotic availabilities at each station before the attacks
         return pi_2_a(self.throughputs(eps), self.rates)
 
 
-    def new_availabilities(self, eps=10e-8):
+    def new_availabilities(self, eps=1e-8):
         # get asymptotic availabilities at each station after the attacks
         return pi_2_a(self.new_throughputs(eps), self.new_rates)
 
 
-    def balance(self, eps=10e-8, cplex=False):
+    def balance(self, eps=1e-8, cplex=False):
         # balance the network as posed in Zhang2015
         target = np.ones((self.size,))
         # cost are travel times
@@ -113,7 +113,7 @@ class Network:
         return opt_rates, opt_routing
 
 
-    def min_attack(self, target, eps=10e-8, cplex=False):
+    def min_attack(self, target, eps=1e-8, cplex=False):
         # target is the vector of target availabilities
         assert np.max(target) == 1.0, 'max(target) > 1.0'
         assert np.min(target) >= eps, 'target not positive'
@@ -134,11 +134,21 @@ class Network:
         inverse_new_rates = np.divide(np.ones((self.size,)), self.new_rates)
         self.new_routing = np.dot(np.diag(inverse_new_rates), tmp)
 
+
     def combine(self):
+        # combine the new_rates (rates + attack_rates) into rates
+        # combine the new_routing (routing + attack_routing) into routing
         self.rates = self.new_rates
         self.routing = self.new_routing
+        # erase attack_rates and attack_routing since they are combined
+        # into rates and routing
+        self.attack_rates = None
+        self.attack_routing = None
+        self.new_rates = self.rates
+        self.new_routing = self.routing        
 
-    def opt_attack_routing(self, attack_rates, k, eps=10e-8, cplex=False):
+
+    def opt_attack_routing(self, attack_rates, k, eps=1e-8, cplex=False):
         # given fixed attack_rates
         # find the best routing of attacks
         # to minimize the weighted sum of the availabilities
@@ -151,7 +161,8 @@ class Network:
         return a, attack_routing
 
 
-    def opt_attack_rate(self, attack_routing, k, nu_init, alpha=5., beta=1., max_iters=10):
+    def opt_attack_rate(self, attack_routing, k, nu_init, \
+                    alpha=5., beta=1., max_iters=10, eps=1e-8):
         # given fixed attack routing, a_k set to 1 and initial 'nu_init'
         ars_solver = AttackRateSolver(self, attack_routing, k, nu_init)
         sol = ars_solver.solve(ars_solver.make_sqrt_step(alpha,beta),
@@ -162,11 +173,27 @@ class Network:
 
 
     def single_destination_attack(self, k):
-        # best attack that scales down all the availabilities by the same factor
-        attack_rates, attack_routing = SingleDestinationAttack(self, k).apply()
-        self.update(attack_rates, attack_routing)
-        return attack_rates, attack_routing
+        # best attack that scales down all the availabilities 
+        # by the same factor except for k
+        sol = SingleDestinationAttack(self, k).apply()
+        self.update(sol['attack_rates'], sol['attack_routing'])
+        return sol
 
+
+    def best_single_destination_attack(self):
+        # find the best index for the single_destination_attack
+        min_obj = np.sum(self.weights)
+        a = self.availabilities()
+        for i in range(self.size):
+            print 'search index', i
+            sol = self.single_destination_attack(i)
+            if sol['alpha'] < 0: continue
+            new_a = (1. / sol['alpha']) * a
+            new_a[i] = 1.0
+            obj = np.sum(np.multiply(self.weights, new_a))
+            #obj = np.sum(np.multiply(self.weights, self.new_availabilities()))
+            if obj < min_obj: best = i
+        return best
 
 
 def load_network(file_path):
