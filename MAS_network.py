@@ -161,13 +161,13 @@ class Network:
         # Returns an adjacency matrix if we allow raduis r number of steps
         assert type(r) == int and r > 0, 'Incorrect r'
         if r == 1:
-            return np.copy(self.full_adjacency)
+            return np.copy(self.adjacency)
         else:
             # Since the graph is undirected, if we can reach node i in at most r
             # steps, we can reach it in either r-1 steps (odd length path from
             # origin to i) or r steps (even length path from origin to i)
-            r_steps = np.linalg.matrix_power(self.full_adjacency, r)
-            r_minus_1_steps = np.linalg.matrix_power(self.full_adjacency, r - 1)
+            r_steps = np.linalg.matrix_power(self.adjacency, r)
+            r_minus_1_steps = np.linalg.matrix_power(self.adjacency, r - 1)
             res = r_steps + r_minus_1_steps
             norm_adjacencies(res)
             return res

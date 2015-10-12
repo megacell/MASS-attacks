@@ -9,19 +9,17 @@ def cal_logo_experiment(adj):
 
     bal_rates, bal_routing = nw.balance()
     nw.combine()
-    nw.adjacency = nw.get_adjacencies(adj)
-    att_rates, att_routing = nw.min_attack(target, full_adj=False)
 
-    nw = load_network('data/queueing_params.mat')
-    bal_rates, bal_routing = nw.balance()
-    nw.combine()
-    att_rates_full, att_routing_full = nw.min_attack(target, full_adj=True)
+    res = []
+    for i in adj:
+        nw.full_adjacency = nw.get_adjacencies(i)
+        att_rates, att_routing = nw.min_attack(target, full_adj=True)
+        res.append(int(np.sum(att_rates)))
 
     print 'Passenger Arrival Rate:', np.sum(nw.rates)
     print 'Balance Cost: ', np.sum(bal_rates)
-    print 'Attack After Balance Cost (adjacency {}): {}'.format(adj, np.sum(att_rates))
-    print 'Attack After Balance Cost (full adjacency): ', np.sum(att_rates_full)
-
+    print 'Attack After Balance Cost (adjacency {}): {}'.format(adj, res)
+    return res
 
 if __name__ == '__main__':
-    cal_logo_experiment(1)
+    cal_logo_experiment(range(1, 10))
