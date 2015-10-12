@@ -29,13 +29,12 @@ def get_image_matrix():
     data = 1 - data/255.0/2
     return data
 
-
 def test_image_matrix(station_names):
     data = get_image_matrix()
     fc = FeatureCollection()
     for n in station_names:
         x, y = get_xy(n)
-        fc.add_polygon(rbs.get_poly(x, y), dict(weight=data[x][y]))
+        fc.add_polygon(rbs.get_poly(x, y), dict(weight=data[x][y], name=n))
 
     # So that scale is from 0 to 1
     fc.add_polygon(rbs.get_poly(100, 100), dict(weight=0))

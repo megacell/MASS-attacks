@@ -20,6 +20,15 @@ LAMBDA_CUTOFF = 700
 # Stations with less than this number of destinations will be removed
 DEST_CUTOFF = 400
 
+# Hard-code stations to be included/excluded
+BLACKLIST = ['20-29', '21-29', '22-29', '22-28', '23-28', '23-34', '20-5',
+             '21-5', '18-4', '19-4', '20-4', '21-4', '20-3', '23-3', '19-2',
+             '20-2', '21-2', '22-2', '23-2', '20-1', '21-1', '22-1', '23-1',
+             '20-0', '21-0', '22-0', '23-0']
+WHITELIST = ['19-19', '19-18', '19-13', '20-13', '21-13', '19-13', '21-13',
+             '19-12','18-10', '19-10', '18-9', '17-8', '13-7', '15-7', '16-7',
+             '15-6']
+
 # Total time sampled over in hours, when the number of arrivals is divided by
 # this number, we get the arrival rate:
 
