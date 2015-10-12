@@ -181,6 +181,13 @@ class TestMasNetwork(unittest.TestCase):
         network.set_weights_to_min_time_usage()
 
 
+    def test_single_destination_attack(self):
+        network = MAS.Network(*generate_asymmetric())
+        network.single_destination_attack(2)
+        self.assertTrue(is_equal(network.new_availabilities(), np.array([1./3, 1./3, 1.])))
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -2,12 +2,13 @@
 '''
 
 import numpy as np
-from min_attack_solver import MinAttackSolver
-from attack_routing_solver import AttackRoutingSolver
 import scipy.io
 from utils import is_equal, pi_2_a, r_2_pi
+# attack solvers
 from attack_rate_solver import AttackRateSolver
-
+from min_attack_solver import MinAttackSolver
+from attack_routing_solver import AttackRoutingSolver
+from single_destination_attack import SingleDestinationAttack
 
 __author__ = 'jeromethai'
 
@@ -154,8 +155,16 @@ class Network:
         sol = ars_solver.solve(ars_solver.make_sqrt_step(alpha,beta),
                                ars_solver.make_stop(max_iters))
         self.update(sol['attack_rates'], attack_routing)
-        print sol['obj_values']
+        # print sol['obj_values']
         return sol['attack_rates']
+
+
+    def single_destination_attack(self, k):
+        # best attack that scales down all the availabilities by the same factor
+        attack_rates, attack_routing = SingleDestinationAttack(self, k).apply()
+        self.update(attack_rates, attack_routing)
+        return attack_rates, attack_routing
+
 
 
 def load_network(file_path):
