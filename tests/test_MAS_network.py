@@ -5,6 +5,7 @@ import unittest
 import MAS_network as MAS
 import numpy as np
 from utils import generate_uniform, generate_asymmetric, is_equal
+import pickle as pkl
 
 __author__ = 'jeromethai'
 
@@ -85,7 +86,7 @@ class TestMasNetwork(unittest.TestCase):
         k = 2
         # get the availabilities 'a' and routing that led to 'a'
         a, routing = network.opt_attack_routing(attack_rates, k)
-        self.assertTrue(is_equal(a, network.new_availabilities()))
+        self.assertTrue(is_equal(a, network.new_availabilities(), 1e-7))
         self.assertTrue(abs(np.sum(a) - 7./3))
 
 
@@ -99,7 +100,7 @@ class TestMasNetwork(unittest.TestCase):
         k = 2
         # get the availabilities 'a' and routing that led to 'a'
         a, routing = network.opt_attack_routing(attack_rates, k)
-        self.assertTrue(is_equal(a, network.new_availabilities()))
+        self.assertTrue(is_equal(a, network.new_availabilities(), 1e-7))
         self.assertTrue(abs(np.sum(a) - 5./3))
 
 
@@ -145,6 +146,45 @@ class TestMasNetwork(unittest.TestCase):
         a, routing = network.opt_attack_routing(attack_rates, k, cplex=True)
         self.assertTrue(is_equal(a, network.new_availabilities()))
         print 'availabilities after attacks', np.sum(network.new_availabilities())
+
+
+    def test_opt_attack_rate(self):
+        network = MAS.Network(*generate_asymmetric())
+        attack_routing = np.array([[0., 0., 1.],[.5, 0., .5],[.5, .5, 0.]])
+        nu_init = np.array([1., 0., 0.])
+        k = 2
+        network.opt_attack_rate(attack_routing, k, nu_init)
+        print network.new_availabilities()
+
+
+    def test_opt_attack_rate_full_network(self):
+        network = MAS.load_network('data/queueing_params.mat')
+        network.budget = 548 * 5.
+        k = np.where(network.new_availabilities() - 1. == 0.0)[0][0]
+        print k
+        #attack_rates = 5. * np.ones((network.size,))
+        #a, routing = network.opt_attack_routing(attack_rates, k, cplex=True)
+        #pkl.dump({'availabilities': a, 'attack_routing': routing, 'attack_rates':attack_rates}, open('data/attack_strategy.pkl', 'wb'))
+        attack = pkl.load(open('data/attack_strategy.pkl'))
+        print 'availabilities before optmization', np.sum(attack['availabilities'])
+        attack_routing = attack['attack_routing']
+        nu_init = attack['attack_rates']
+        network.opt_attack_rate(attack_routing, k, nu_init, alpha=10., beta=1., max_iters=10)
+        print 
+        print 'availabilities after optmization', np.sum(network.new_availabilities())
+        print np.max(network.new_availabilities())
+        print np.where(network.new_availabilities() - 1. == 0.0)[0][0]
+
+
+    def test_set_weights_to_min_time_usage(self):
+        network = MAS.load_network('data/queueing_params.mat')
+        network.set_weights_to_min_time_usage()
+
+
+    def test_single_destination_attack(self):
+        network = MAS.Network(*generate_asymmetric())
+        network.single_destination_attack(2)
+        self.assertTrue(is_equal(network.new_availabilities(), np.array([1./3, 1./3, 1.])))
 
 
 

@@ -34,7 +34,7 @@ def generate_asymmetric():
     return rates, routing, travel_times
 
 
-def r_2_pi(routing, eps=10e-8):
+def r_2_pi(routing, eps=1e-8):
     # compute the stationary distribution given a routing matrix
     eigenvalues, eigenvectors = np.linalg.eig(routing.transpose())
     index = np.argwhere(abs(eigenvalues - 1.0) < eps)[0][0]
@@ -48,7 +48,7 @@ def pi_2_a(throughputs, rates):
     return a / np.max(a)
 
 
-def is_equal(a, b, eps=10e-8):
+def is_equal(a, b, eps=1e-8):
     # check if numpy arrays a and b are check_equal
     res = np.sum(abs(a - b)) < eps
     if not res:
@@ -69,4 +69,5 @@ def simplex_projection(v, z=1):
     theta = 1.0/(rho + 1) * (sum(mu[i] for i in range(rho+1)) - z)
 
     w = [max(vi - theta, 0) for vi in v]
-    return w
+    return np.array(w)
+
