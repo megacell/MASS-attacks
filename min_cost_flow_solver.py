@@ -9,7 +9,7 @@ import numpy as np
 
 __author__ = 'jeromethai'
 
-
+# deprecated
 def solver(coeff, sources, adjacency):
     print 'start the solver for the min-cost flow problem ...'
     # apply CVXOPT to solve the min-cost flow problem

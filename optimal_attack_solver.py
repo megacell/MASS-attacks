@@ -14,7 +14,7 @@ __author__ = 'jeromethai'
 
 class OptimalAttackSolver:
     # class for the optimal attack solver
-    def __init__(self, network, eps=1e-8, cplex=False, k=None):
+    def __init__(self, network, eps=1e-8, cplex=True, k=None):
         self.network = network
         self.k = k
         self.N = network.size
