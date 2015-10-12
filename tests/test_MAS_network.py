@@ -136,8 +136,6 @@ class TestMasNetwork(unittest.TestCase):
         self.assertTrue(abs(np.sum(a) - 5./3))
 
 
-    # the following test is a bit slow, but should work!
-
     def test_cplex_attack_routing_full_network(self):
         network = MAS.load_network('data/queueing_params.mat')
         k = np.where(network.new_availabilities() - 1. == 0.0)[0][0]
