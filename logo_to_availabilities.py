@@ -1,12 +1,12 @@
-import cfg as c
 import numpy as np
 import scipy.io as sio
 
 from PIL import Image
 from pdb import set_trace as T
 
-from utils import FeatureCollection
-from generate_matrices import rbs, get_xy
+import param_inference.cfg as c
+from param_inference.utils import FeatureCollection
+from param_inference.generate_matrices import rbs, get_xy
 
 
 LOGO_FILE = 'data/cal-logo-bw.jpg'
@@ -26,7 +26,7 @@ def get_image_matrix():
     assert(data.shape == (c.XSIZE, c.YSIZE))
 
     # Normalize
-    data = 1 - data/255.0
+    data = 1 - data/255.0/2
     return data
 
 
@@ -36,6 +36,9 @@ def test_image_matrix(station_names):
     for n in station_names:
         x, y = get_xy(n)
         fc.add_polygon(rbs.get_poly(x, y), dict(weight=data[x][y]))
+
+    # So that scale is from 0 to 1
+    fc.add_polygon(rbs.get_poly(100, 100), dict(weight=0))
     fc.dump('tmp1.geojson')
 
 def get_availabilities(station_names):
@@ -43,7 +46,7 @@ def get_availabilities(station_names):
     def get_avail(name):
         x, y = get_xy(name)
         return data[x][y]
-    return map(get_avail, station_names)
+    return np.array(map(get_avail, station_names))
 
 if __name__ == '__main__':
-    test_image_matrix(sio.loadmat('queueing_params.mat')['stations'])
+    test_image_matrix(sio.loadmat('data/queueing_params.mat')['stations'])
