@@ -11,7 +11,7 @@ __author__ = 'jeromethai'
 
 class MinAttackSolver:
     # class for computing the min attacks with the availabilities fixed
-    def __init__(self, network, target_availabilities, cost, eps=1e-8, cplex=True):
+    def __init__(self, network, target_availabilities, cost, full_adj=True, eps=1e-8, cplex=True):
         self.network = network
         self.a = target_availabilities # availabilities are fixed
         self.cost = cost # cost on the rates of attacks
@@ -20,6 +20,7 @@ class MinAttackSolver:
         self.eps = eps
         self.cplex = cplex
         self.N = network.size
+        self.adj = network.full_adjacency if full_adj else network.adjacency
         self.check()
 
 
@@ -76,5 +77,5 @@ class MinAttackSolver:
         # runs the min-cost-flow problem
         # solver = mcf.cplex_solver if self.cplex else mcf.solver
         # flow = solver(coeff, sources, self.network.adjacency)
-        flow = mcf.cplex_solver(coeff, sources, self.network.adjacency)
+        flow = mcf.cplex_solver(coeff, sources, self.adj)
         return self.flow_to_rates_routing(flow)

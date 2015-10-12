@@ -13,7 +13,7 @@ __author__ = 'jeromethai'
 
 class AttackRoutingSolver:
     # class for computing the best attacks with the rate of attacks fixed
-    def __init__(self, network, attack_rates, k, eps=1e-8, cplex=True):
+    def __init__(self, network, attack_rates, k, full_adj=True, eps=1e-8, cplex=True):
         self.network = network
         self.nu = attack_rates # fixed attack rate
         self.phi = self.network.rates # rates before the attacks
@@ -23,7 +23,7 @@ class AttackRoutingSolver:
         self.cplex = cplex
         self.N = network.size
         self.w = network.weights # weights for the availabilities in the obj
-        self.adj = network.adjacency
+        self.adj = network.full_adjacency if full_adj else network.adjacency
         self.check()
 
 

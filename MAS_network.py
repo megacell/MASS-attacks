@@ -25,9 +25,8 @@ class Network:
         self.size = len(rates)
         self.mean_travel_time = np.sum(self.travel_times) / (self.size * self.size)
         # compute adjacency matrix
-        if adjacency is None:
-            adjacency = np.ones((self.size, self.size))
-            adjacency[range(self.size), range(self.size)] = 0.0
+        self.full_adjacency = np.ones((self.size, self.size))
+        self.full_adjacency[range(self.size), range(self.size)] = 0.0
         self.adjacency = adjacency
         # attack rates and routing
         self.attack_rates = None
@@ -75,11 +74,12 @@ class Network:
         assert np.sum(self.weights > eps) == self.size, 'weights not positive'
 
         # check the adjacency matrix
-        assert self.adjacency.shape == (self.size, self.size)
-        tmp = (self.adjacency == 0.) + (self.adjacency == 1.)
-        assert np.sum(tmp) == self.size * self.size, "entries in adj not in 0, 1"
-        assert np.sum(self.adjacency.diagonal()) == 0.0, \
-            "diagonal of routing matrix not null"
+        if self.adjacency is not None:
+            assert self.adjacency.shape == (self.size, self.size)
+            tmp = (self.adjacency == 0.) + (self.adjacency == 1.)
+            assert np.sum(tmp) == self.size * self.size, "entries in adj not in 0, 1"
+            assert np.sum(self.adjacency.diagonal()) == 0.0, \
+                "diagonal of routing matrix not null"
 
 
     def set_weights_to_min_time_usage(self):
@@ -109,25 +109,25 @@ class Network:
         return pi_2_a(self.new_throughputs(eps), self.new_rates)
 
 
-    def balance(self, eps=1e-8, cplex=True):
+    def balance(self, full_adj=True, eps=1e-8, cplex=True):
         # balance the network as posed in Zhang2015
         target = np.ones((self.size,))
         # cost are travel times
         cost = self.travel_times
         # modify cost so that the problem is bounded
         cost[range(self.size), range(self.size)] = self.mean_travel_time
-        opt_rates, opt_routing = MinAttackSolver(self, target, cost, eps, cplex).solve()
+        opt_rates, opt_routing = MinAttackSolver(self, target, cost, full_adj, eps, cplex).solve()
         # update the network
         self.update(opt_rates, opt_routing)
         return opt_rates, opt_routing
 
 
-    def min_attack(self, target, eps=1e-8, cplex=True):
+    def min_attack(self, target, full_adj=True, eps=1e-8, cplex=True):
         # target is the vector of target availabilities
         assert np.max(target) == 1.0, 'max(target) > 1.0'
         assert np.min(target) >= eps, 'target not positive'
         cost = np.ones((self.size, self.size))
-        opt_rates, opt_routing = MinAttackSolver(self, target, cost, eps, cplex).solve()
+        opt_rates, opt_routing = MinAttackSolver(self, target, cost, full_adj, eps, cplex).solve()
         # update the network
         self.update(opt_rates, opt_routing)
         return opt_rates, opt_routing
@@ -157,14 +157,14 @@ class Network:
         self.new_routing = self.routing
 
 
-    def opt_attack_routing(self, attack_rates, k, eps=1e-8, cplex=True):
+    def opt_attack_routing(self, attack_rates, k, full_adj=True, eps=1e-8, cplex=True):
         # given fixed attack_rates
         # find the best routing of attacks
         # to minimize the weighted sum of the availabilities
         assert len(attack_rates) == self.size, 'attack_rates wrong size'
         assert (k >= 0 and  k < self.size), 'index k is out of range'
         assert np.sum(attack_rates >= 0.0) == self.size, 'negative attack_rate'
-        a, attack_routing = AttackRoutingSolver(self, attack_rates, k, eps, cplex).solve()
+        a, attack_routing = AttackRoutingSolver(self, attack_rates, k, full_adj, eps, cplex).solve()
         # update the network
         self.update(attack_rates, attack_routing)
         return a, attack_routing
@@ -187,6 +187,7 @@ class Network:
         sol = SingleDestinationAttack(self, k).apply()
         self.update(sol['attack_rates'], sol['attack_routing'])
         return sol
+
 
     def split_budget_attack(self):
         # Splits budget amongst all stations and attack
