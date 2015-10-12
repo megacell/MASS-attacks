@@ -25,4 +25,5 @@ class TestOptimalAttackSolver(unittest.TestCase):
         print 'combined customer and rebalancing rates', np.sum(network.rates)
         # oas = OptimalAttackSolver(network, cplex=True, k=k)
         oas = OptimalAttackSolver(network, cplex=True)
-        oas.solve(alpha=10., beta=1., max_iters_attack_rate=5)
+        # this is very slow!! commenting out from unittest
+        # oas.solve(alpha=10., beta=1., max_iters_attack_rate=5)
