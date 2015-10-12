@@ -22,4 +22,4 @@ def cal_logo_experiment(adj):
     return res
 
 if __name__ == '__main__':
-    cal_logo_experiment(range(1, 10))
+    cal_logo_experiment(range(1, 15))
