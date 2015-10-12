@@ -29,9 +29,14 @@ def visualize():
         pickups = int(row['pickups'])
     fc.add_polygon(rbs.get_poly(x, y), {'weight': pickups})
 
+def is_adjacent(a, b):
+    ax, ay = get_xy(a)
+    bx, by = get_xy(b)
+    return int((ax - bx, ay - by) in ((1, 0), (0, 1), (-1, 0), (0, -1)))
+
 def filter_data():
     total = []
-    to_exclude = set()
+    to_exclude = set(c.BLACKLIST)
 
     for row in csv.DictReader(open(c.LAMBDA_FILE)):
         pickups = int(row['pickups'])
@@ -51,6 +56,7 @@ def filter_data():
         if dests < c.DEST_CUTOFF:
             to_exclude.add(origin)
 
+    to_exclude = to_exclude.difference(c.WHITELIST)
     return sorted([s for s in total if s not in to_exclude]), to_exclude
 
 def generate(filename):
@@ -134,6 +140,11 @@ def generate(filename):
 
     print 'T generation: total={}, failed to match={}, maxT={}'\
       .format( len(tmat) ** 2, failed, maxT)
+
+    # Generate adjacency matrix
+
+    adj = np.array([[is_adjacent(o, d) for o in to_include] for d in to_include])
+    mat['adj'] = adj
 
     sio.savemat(filename, mat)
     print 'Saved as: ' + filename
