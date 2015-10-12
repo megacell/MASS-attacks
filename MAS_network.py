@@ -39,7 +39,6 @@ class Network:
         # budget for the attacks
         self.budget = 1.0
 
-
     def check(self, eps=10e-8):
         assert eps > 0., "eps too small"
 
@@ -135,6 +134,9 @@ class Network:
         inverse_new_rates = np.divide(np.ones((self.size,)), self.new_rates)
         self.new_routing = np.dot(np.diag(inverse_new_rates), tmp)
 
+    def combine(self):
+        self.rates = self.new_rates
+        self.routing = self.new_routing
 
     def opt_attack_routing(self, attack_rates, k, eps=10e-8, cplex=False):
         # given fixed attack_rates
@@ -171,5 +173,6 @@ def load_network(file_path):
     # generate MAS network from file
     data = scipy.io.loadmat(file_path)
     network = Network(np.squeeze(data['lam']), data['p'], data['T'])
+    network.station_names = data['stations']
     network.check()
     return network
