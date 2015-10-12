@@ -68,7 +68,7 @@ class TestMinAttackSolver(unittest.TestCase):
         target = np.array([ 0.25, 0.5, 1.])
         cost = np.ones((3,3))
         coeff, sources = MinAttackSolver(network, target, cost).min_cost_flow_init()
-        string = to_cplex_lp_file(coeff, sources)
+        string = to_cplex_lp_file(coeff, sources, network.adjacency)
         # print string
 
 

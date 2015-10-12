@@ -42,7 +42,7 @@ def constraints(sources, adjacency, N):
 
 def cplex_solver(coeff, sources, adjacency):
     N = len(sources)
-    open('tmp.lp', 'w').write(to_cplex_lp_file(coeff, sources))
+    open('tmp.lp', 'w').write(to_cplex_lp_file(coeff, sources, adjacency))
     variables, sols = cplex_interface.solve_from_file('tmp.lp', 'o')
     # reconstruct flow matrix from 'sols' returned by cplex solver
     non_zeros = np.where(sols)
@@ -53,23 +53,26 @@ def cplex_solver(coeff, sources, adjacency):
     return flow
 
 
-def to_cplex_lp_file(coeff, sources):
+def to_cplex_lp_file(coeff, sources, adj):
     # generate input file for CPLEX solver
     # http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
     N = len(sources)
     # Objective
     obj = '+'.join(['{} x_{}_{}'.format(coeff[i,j], i, j)
                    for i in range(N)
-                   for j in range(N)])
+                   for j in range(N)
+                   if adj[i,j]==1.])
 
     # equality constraints
     cst = '\n  '.join(['+'.join(['x_{}_{} - x_{}_{}'.format(j, i, i, j)
-                                 for j in range(i) + range(i+1, N)])
+                                 for j in range(i) + range(i+1, N)
+                                 if adj[i,j]==1.])
                         + '= {}'.format(sources[i])
                        for i in range(N)])
     # bounds
     bnd = '\n  '.join(['0 <= x_{}_{}'.format(i,j)
                        for i in range(N)
-                       for j in range(N)])
+                       for j in range(N)
+                       if adj[i,j]==1.])
 
     return cplex_interface.template.format(obj, cst, bnd)

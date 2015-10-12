@@ -23,6 +23,7 @@ class AttackRoutingSolver:
         self.cplex = cplex
         self.N = network.size
         self.w = network.weights # weights for the availabilities in the obj
+        self.adj = network.adjacency
         self.check()
 
 
@@ -123,6 +124,7 @@ class AttackRoutingSolver:
         for i in range(self.k) + range(self.k + 1, N):
             eqn = []
             for j in range(i) + range(i+1, N):
+                if self.adj[i,j] == 0.: continue
                 eqn.append('{0} y_{3}_{2} - {1} y_{2}_{3}'\
                             .format(self.nu[j], lam[i], i, j))
                 if j != self.k:
@@ -132,7 +134,8 @@ class AttackRoutingSolver:
         # constraints on the a_i
         for i in range(N):
             eqn = ' + '.join(['y_{}_{}'.format(i,j)
-                              for j in range(i) + range(i+1, N)])
+                              for j in range(i) + range(i+1, N) 
+                              if self.adj[i,j] == 1.])
             end = '= 1.0' if i == self.k else '- a_{} = 0.0'
             cst.append(eqn + end.format(i))
         cst = '\n  '.join(cst)
@@ -140,6 +143,7 @@ class AttackRoutingSolver:
         # bounds
         bnd = '\n  '.join(['0 <= y_{}_{}'.format(i,j)
                            for i in range(N)
-                           for j in range(i) + range(i+1, N)])
+                           for j in range(i) + range(i+1, N)
+                           if self.adj[i,j]== 1.0])
 
         return cplex_interface.template.format(obj, cst, bnd)
