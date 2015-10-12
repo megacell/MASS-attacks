@@ -13,7 +13,7 @@ __author__ = 'jeromethai'
 
 class AttackRoutingSolver:
     # class for computing the best attacks with the rate of attacks fixed
-    def __init__(self, network, attack_rates, k, eps=1e-8, cplex=False):
+    def __init__(self, network, attack_rates, k, eps=1e-8, cplex=True):
         self.network = network
         self.nu = attack_rates # fixed attack rate
         self.phi = self.network.rates # rates before the attacks
@@ -34,11 +34,12 @@ class AttackRoutingSolver:
 
     def solve(self):
         # solver for the attack routing
-        solver = self.cplex_solver if self.cplex else self.cvxopt_solver
-        flow = solver()
+        # solver = self.cplex_solver if self.cplex else self.cvxopt_solver
+        #flow = solver()
+        flow = self.cplex_solver()
         return self.flow_to_availabilities_routing(flow)
 
-
+    # deprecated
     def cvxopt_solver(self):
         c = matrix(np.repeat(self.w, self.N))
         b, A = self.constraints()

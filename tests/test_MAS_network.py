@@ -88,7 +88,7 @@ class TestMasNetwork(unittest.TestCase):
         # get the availabilities 'a' and routing that led to 'a'
         a, routing = network.opt_attack_routing(attack_rates, k)
         self.assertTrue(is_equal(a, network.new_availabilities(), 1e-7))
-        self.assertTrue(abs(np.sum(a) - 7./3))
+        self.assertTrue(abs(np.sum(a) - 5./3))
 
 
     def test_attack_routing_2(self):
@@ -192,6 +192,9 @@ class TestMasNetwork(unittest.TestCase):
         self.assertTrue(is_equal(network.new_availabilities(), np.array([1./3, 1./3, 1.])))
 
 
+    def test_load_full_network_with_adjacency(self):
+        network = MAS.load_network('data/queueing_params_with_adjacency.mat')
+        self.assertTrue(np.sum(network.adjacency) / (network.size * network.size) < 4.)
 
 
 if __name__ == '__main__':

@@ -14,7 +14,7 @@ __author__ = 'jeromethai'
 
 
 class Network:
-    def __init__(self, rates, routing, travel_times):
+    def __init__(self, rates, routing, travel_times, adjacency=None):
         # Class for a Jackson network
         # rates        : numpy array with rates of arrival of passengers
         # routing      : numpy matrix for routing probabilitites
@@ -25,8 +25,9 @@ class Network:
         self.size = len(rates)
         self.mean_travel_time = np.sum(self.travel_times) / (self.size * self.size)
         # compute adjacency matrix
-        adjacency = np.ones((self.size, self.size))
-        adjacency[range(self.size), range(self.size)] = 0.0
+        if adjacency is None:
+            adjacency = np.ones((self.size, self.size))
+            adjacency[range(self.size), range(self.size)] = 0.0
         self.adjacency = adjacency
         # attack rates and routing
         self.attack_rates = None
@@ -38,6 +39,7 @@ class Network:
         self.weights=np.ones((self.size,))
         # budget for the attacks
         self.budget = 1.0
+
 
     def check(self, eps=1e-8):
         assert eps > 0., "eps too small"
@@ -72,6 +74,13 @@ class Network:
         assert len(self.weights) == self.size, 'weights wrong size'
         assert np.sum(self.weights > eps) == self.size, 'weights not positive'
 
+        # check the adjacency matrix
+        assert self.adjacency.shape == (self.size, self.size)
+        tmp = (self.adjacency == 0.) + (self.adjacency == 1.)
+        assert np.sum(tmp) == self.size * self.size, "entries in adj not in 0, 1"
+        assert np.sum(self.adjacency.diagonal()) == 0.0, \
+            "diagonal of routing matrix not null"
+
 
     def set_weights_to_min_time_usage(self):
         # set weights to minimize the time usage of the network
@@ -100,7 +109,7 @@ class Network:
         return pi_2_a(self.new_throughputs(eps), self.new_rates)
 
 
-    def balance(self, eps=1e-8, cplex=False):
+    def balance(self, eps=1e-8, cplex=True):
         # balance the network as posed in Zhang2015
         target = np.ones((self.size,))
         # cost are travel times
@@ -113,7 +122,7 @@ class Network:
         return opt_rates, opt_routing
 
 
-    def min_attack(self, target, eps=1e-8, cplex=False):
+    def min_attack(self, target, eps=1e-8, cplex=True):
         # target is the vector of target availabilities
         assert np.max(target) == 1.0, 'max(target) > 1.0'
         assert np.min(target) >= eps, 'target not positive'
@@ -148,7 +157,7 @@ class Network:
         self.new_routing = self.routing
 
 
-    def opt_attack_routing(self, attack_rates, k, eps=1e-8, cplex=False):
+    def opt_attack_routing(self, attack_rates, k, eps=1e-8, cplex=True):
         # given fixed attack_rates
         # find the best routing of attacks
         # to minimize the weighted sum of the availabilities
@@ -200,14 +209,17 @@ class Network:
             new_a[i] = 1.0
             obj = np.sum(np.multiply(self.weights, new_a))
             #obj = np.sum(np.multiply(self.weights, self.new_availabilities()))
-            if obj < min_obj: best = i
+            if obj < min_obj: 
+                best, min_obj = i, obj
         return best
 
 
 def load_network(file_path):
     # generate MAS network from file
     data = scipy.io.loadmat(file_path)
-    network = Network(np.squeeze(data['lam']), data['p'], data['T'])
+    # num1 = (20 if someBoolValue else num1)
+    adjacency = data['adj'] if 'adj' in data else None
+    network = Network(np.squeeze(data['lam']), data['p'], data['T'], adjacency)
     network.station_names = data['stations']
     network.check()
     return network
