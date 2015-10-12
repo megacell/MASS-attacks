@@ -14,15 +14,16 @@ __author__ = 'jeromethai'
 
 class OptimalAttackSolver:
     # class for the optimal attack solver
-    def __init__(self, network, eps=1e-8, cplex=True, k=None):
+    def __init__(self, network, max_iters=10, full_adj=True, eps=1e-8, cplex=True, k=None):
         self.network = network
         self.k = k
         self.N = network.size
         self.eps = eps
         self.cplex = cplex
         self.w = network.weights
+        self.full_adj = full_adj
         # objects specific to the block-coordinate descent
-        self.max_iters = 10
+        self.max_iters = max_iters
 
 
     def objective(self, availabilities):
@@ -32,13 +33,13 @@ class OptimalAttackSolver:
     def solve(self, alpha=10., beta=1., max_iters_attack_rate=5, split_budget=False):
         # solves using block-coordinate descent
         network = self.network
-        eps, cplex =  self.eps, self.cplex
+        full_adj, eps, cplex =  self.full_adj, self.eps, self.cplex
         # uses the single_destination_attack policy as a starting point
         print '============= initial objective value ============='
         print self.objective(network.new_availabilities())
 
         k = network.best_single_destination_attack() if self.k is None else self.k
-        if spilt_budget:
+        if split_budget:
             network.split_budget_attack()
         else:
             network.single_destination_attack(k)
@@ -48,10 +49,10 @@ class OptimalAttackSolver:
         for i in range(self.max_iters):
             print ' ============= iter ============='
             print i
-            network.opt_attack_routing(network.attack_rates, k, eps, cplex)
+            network.opt_attack_routing(network.attack_rates, k, full_adj, eps, cplex)
             print '============= after opt_attack_routing ============='
             print self.objective(network.new_availabilities())
-            network.min_attack(network.new_availabilities(), eps, cplex)
+            network.min_attack(network.new_availabilities(), full_adj, eps, cplex)
             print '============= after min_attack ============='
             print self.objective(network.new_availabilities())
             network.opt_attack_rate(network.attack_routing, k, network.attack_rates, \

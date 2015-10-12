@@ -159,6 +159,7 @@ class Network:
 
     def get_adjacencies(self, r):
         # Returns an adjacency matrix if we allow raduis r number of steps
+        assert self.adjacency is not None
         assert type(r) == int and r > 0, 'Incorrect r'
         if r == 1:
             return np.copy(self.adjacency)
@@ -171,6 +172,11 @@ class Network:
             res = r_steps + r_minus_1_steps
             norm_adjacencies(res)
             return res
+
+
+    def update_adjacency(self, r):
+        # update the adjacency such that it allows r number of steps
+        self.adjacency = self.get_adjacencies(r)
 
 
     def opt_attack_routing(self, attack_rates, k, full_adj=True, eps=1e-8, cplex=True):
