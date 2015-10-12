@@ -69,4 +69,5 @@ def simplex_projection(v, z=1):
     theta = 1.0/(rho + 1) * (sum(mu[i] for i in range(rho+1)) - z)
 
     w = [max(vi - theta, 0) for vi in v]
-    return w
+    return np.array(w)
+

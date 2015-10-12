@@ -36,12 +36,21 @@ class TestAttackRateSolver(unittest.TestCase):
 
     def test_init_solver(self):
         ars_solver = self.generate_solver()
-        ars_solver.init_solver(None, None)
+        ars_solver.init_solver()
         self.assertTrue(is_equal(ars_solver.obj_values[0], 1.75))
         self.assertTrue(is_equal(ars_solver.a, np.array([.25, .5, 1.])))
         self.assertTrue(ars_solver.iter == 0)
 
 
+    def test_solver(self):
+        ars_solver = self.generate_solver()
+        ars_solver.solve(ars_solver.make_sqrt_step(5,1.),
+                               ars_solver.make_stop(10))
+        print ars_solver.obj_values[-1]
+        print ars_solver.nu
+        print ars_solver.a
+        ars_solver.network.update(ars_solver.nu, ars_solver.kappa)
+        print ars_solver.network.new_availabilities()    
 
 
 if __name__ == '__main__':

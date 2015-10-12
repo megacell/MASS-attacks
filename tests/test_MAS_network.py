@@ -146,7 +146,13 @@ class TestMasNetwork(unittest.TestCase):
     #     self.assertTrue(is_equal(a, network.new_availabilities()))
     #     print 'availabilities after attacks', np.sum(network.new_availabilities())
 
-
+    def test_opt_attack_rate(self):
+        network = MAS.Network(*generate_asymmetric())
+        attack_routing = np.array([[0., 0., 1.],[.5, 0., .5],[.5, .5, 0.]])
+        nu_init = np.array([1., 0., 0.])
+        k = 2
+        network.opt_attack_rate(attack_routing, k, nu_init)
+        print network.new_availabilities()    
 
 
 if __name__ == '__main__':

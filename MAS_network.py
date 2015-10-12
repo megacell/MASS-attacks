@@ -6,6 +6,8 @@ from min_attack_solver import MinAttackSolver
 from attack_routing_solver import AttackRoutingSolver
 import scipy.io
 from utils import is_equal, pi_2_a, r_2_pi
+from attack_rate_solver import AttackRateSolver
+
 
 __author__ = 'jeromethai'
 
@@ -33,7 +35,8 @@ class Network:
         self.new_routing = routing
         # weights wuch that attacks minimize weighted sum of availabilities
         self.weights=np.ones((self.size,))
-
+        # budget for the attacks
+        self.budget = 1.0
 
 
     def check(self, eps=10e-8):
@@ -132,10 +135,19 @@ class Network:
         assert len(attack_rates) == self.size, 'attack_rates wrong size'
         assert (k >= 0 and  k < self.size), 'index k is out of range'
         assert np.sum(attack_rates >= 0.0) == self.size, 'negative attack_rate'
-        a, routing = AttackRoutingSolver(self, attack_rates, k, eps, cplex).solve()
+        a, attack_routing = AttackRoutingSolver(self, attack_rates, k, eps, cplex).solve()
         # update the network
-        self.update(attack_rates, routing)
-        return a, routing
+        self.update(attack_rates, attack_routing)
+        return a, attack_routing
+
+
+    def opt_attack_rate(self, attack_routing, k, nu_init, alpha=5., beta=1., max_ters=10):
+        # given fixed attack routing, a_k set to 1 and initial 'nu_init'
+        ars_solver = AttackRateSolver(self, attack_routing, k, nu_init)
+        attack_rates = ars_solver.solve(ars_solver.make_sqrt_step(alpha,beta),
+                               ars_solver.make_stop(max_ters))
+        self.update(attack_rates, attack_routing)
+        return attack_rates
 
 
 def load_network(file_path):
