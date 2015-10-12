@@ -3,7 +3,7 @@
 
 import numpy as np
 import scipy.io
-from utils import is_equal, pi_2_a, r_2_pi
+from utils import is_equal, pi_2_a, r_2_pi, norm_adjacencies
 # attack solvers
 from attack_rate_solver import AttackRateSolver
 from min_attack_solver import MinAttackSolver
@@ -157,6 +157,21 @@ class Network:
         self.new_routing = self.routing
 
 
+    def get_adjacencies(self, r):
+        # Returns an adjacency matrix if we allow raduis r number of steps
+        assert type(r) == int and r > 0, 'Incorrect r'
+        if r == 1:
+            return np.copy(self.adjacency)
+        else:
+            # Since the graph is undirected, if we can reach node i in at most r
+            # steps, we can reach it in either r-1 steps (odd length path from
+            # origin to i) or r steps (even length path from origin to i)
+            r_steps = np.linalg.matrix_power(self.adjacency, r)
+            r_minus_1_steps = np.linalg.matrix_power(self.adjacency, r - 1)
+            res = r_steps + r_minus_1_steps
+            norm_adjacencies(res)
+            return res
+
     def opt_attack_routing(self, attack_rates, k, eps=1e-8, cplex=True):
         # given fixed attack_rates
         # find the best routing of attacks
@@ -209,7 +224,7 @@ class Network:
             new_a[i] = 1.0
             obj = np.sum(np.multiply(self.weights, new_a))
             #obj = np.sum(np.multiply(self.weights, self.new_availabilities()))
-            if obj < min_obj: 
+            if obj < min_obj:
                 best, min_obj = i, obj
         return best
 
