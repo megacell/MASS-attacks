@@ -16,8 +16,9 @@ __pycache__
 
 # Project specific
 *.geojson
-/big_query/data/*
-/big_query/queueing_params.mat
+/param_inference/data/*
+/param_inference/queueing_params.mat
 data/*
 !data/.gitkeep
 *.lp
+*.qml
