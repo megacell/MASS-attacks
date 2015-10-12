@@ -73,6 +73,13 @@ class Network:
         assert np.sum(self.weights > eps) == self.size, 'weights not positive'
 
 
+    def set_weights_to_min_time_usage(self):
+        # set weights to minimize the time usage of the network
+        tmp = np.multiply(self.routing, self.travel_times)
+        self.weights = np.multiply(self.rates, np.sum(tmp, axis=1))
+        self.check()
+
+
     def throughputs(self, eps=10e-8):
         # get throughputs by solving the balanced equations before attacks
         return r_2_pi(self.routing, eps)
@@ -141,13 +148,14 @@ class Network:
         return a, attack_routing
 
 
-    def opt_attack_rate(self, attack_routing, k, nu_init, alpha=5., beta=1., max_ters=10):
+    def opt_attack_rate(self, attack_routing, k, nu_init, alpha=5., beta=1., max_iters=10):
         # given fixed attack routing, a_k set to 1 and initial 'nu_init'
         ars_solver = AttackRateSolver(self, attack_routing, k, nu_init)
-        attack_rates = ars_solver.solve(ars_solver.make_sqrt_step(alpha,beta),
-                               ars_solver.make_stop(max_ters))
-        self.update(attack_rates, attack_routing)
-        return attack_rates
+        sol = ars_solver.solve(ars_solver.make_sqrt_step(alpha,beta),
+                               ars_solver.make_stop(max_iters))
+        self.update(sol['attack_rates'], attack_routing)
+        print sol['obj_values']
+        return sol['attack_rates']
 
 
 def load_network(file_path):

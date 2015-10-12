@@ -11,7 +11,7 @@ __author__ = 'jeromethai'
 
 class MinAttackSolver:
     # class for computing the min attacks with the availabilities fixed
-    def __init__(self, network, target_availabilities, cost, eps=10e-8, cplex=False):
+    def __init__(self, network, target_availabilities, cost, eps=1e-8, cplex=False):
         self.network = network
         self.a = target_availabilities # availabilities are fixed
         self.cost = cost # cost on the rates of attacks

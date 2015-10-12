@@ -12,11 +12,11 @@ __author__ = 'jeromethai'
 
 
 class AttackRateSolver:
-    def __init__(self, network, attack_routing, k, nu_init, eps=10e-8):
+    def __init__(self, network, attack_routing, k, nu_init, eps=1e-8):
         # Class for the Attack Rate Solver
         self.network = network
         self.kappa = attack_routing # the attack routing is fixed
-        self.phi = self.network.rates # rates before the attacks
+        self.phi = network.rates # rates before the attacks
         self.delta = network.routing # routing prob. before attacks
         self.k = k # availability at station k is set to 1
         self.nu = nu_init # nu_init is the initial rate of attacks
@@ -27,15 +27,15 @@ class AttackRateSolver:
         self.b = network.budget
         # objects specific to the gradient descent algorithm
         self.iter = -1 # iteration number
-        self.max_iters = 1000
-        self.a = None
+        self.max_iters = 100
+        self.a = None # availabilities
         self.obj_values = [] # ojective values
         self.check()
 
 
     def init_solver(self):
         obj, a = self.objective(self.nu)
-        self.update(self.nu, obj, a)
+        self.update(self.nu, obj, a)        
 
 
     def check(self):
@@ -96,8 +96,10 @@ class AttackRateSolver:
         return np.dot(np.array(jacobian), self.w_less_k)
 
 
-    def make_stop(self, max_iter=100):
-        return lambda: self.iter > max_iter
+    def make_stop(self, max_iter=100, min_progress=1e-5):
+        o = self.obj_values
+        return lambda: (self.iter > max_iter) or \
+                       (len(o) > 1 and abs(o[-1]-o[-2]) < min_progress)
 
 
     def make_sqrt_step(self, alpha=0.5, beta=1.0):
@@ -113,7 +115,9 @@ class AttackRateSolver:
             obj, a = self.objective(nu)
             self.update(nu, obj, a)
             if stop(): break
-        return self.nu
+            print 'iter: ', i
+            print 'obj: ', obj
+        return {'attack_rates': self.nu, 'obj_values': self.obj_values}
 
 
 
