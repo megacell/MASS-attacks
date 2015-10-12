@@ -100,7 +100,8 @@ class AttackRoutingSolver:
         flow[range(self.N), range(self.N)] = 0.0
         # availabilities
         avail = np.sum(flow, 1)
-        assert np.sum(avail > self.eps) == self.N
+        assert np.min(avail) >= self.eps, \
+                'min avail. too small: {} < {}'.format(np.min(avail), self.eps)
         # routing probabilities for the attacks
         tmp = np.divide(np.ones((self.N,)), avail)
         opt_routing = np.dot(np.diag(tmp), flow)
