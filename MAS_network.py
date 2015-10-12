@@ -192,7 +192,8 @@ class Network:
             new_a[i] = 1.0
             obj = np.sum(np.multiply(self.weights, new_a))
             #obj = np.sum(np.multiply(self.weights, self.new_availabilities()))
-            if obj < min_obj: best = i
+            if obj < min_obj: 
+                best, min_obj = i, obj
         return best
 
 
