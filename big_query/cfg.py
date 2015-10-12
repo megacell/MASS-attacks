@@ -6,8 +6,8 @@ DIAF      = -0.235                  # Dialation factor, to make sure squares
                                     # look square after rotation
 GRID_SIZE = 0.0022                  # Size of each grid square in lat/lon
 
-XSIZE = 23  # Number of grid boxes in x-direction
-YSIZE = 35  # Number of grid boxes in y-direction
+XSIZE = 24  # Number of grid boxes in x-direction
+YSIZE = 36  # Number of grid boxes in y-direction
 
 ### Data processing
 LAMBDA_FILE = 'data/lambda.csv'
