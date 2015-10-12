@@ -50,7 +50,7 @@ class AttackRoutingSolver:
     def cplex_solver(self):
         open('tmp.lp', 'w').write(self.to_cplex_lp_file())
         variables, sols = cplex_interface.solve_from_file('tmp.lp', 'o')
-        # reconstruct flow matrix from 'sols' returned by cplex solver 
+        # reconstruct flow matrix from 'sols' returned by cplex solver
         non_zeros = np.where(sols)
         flow = np.zeros((self.N, self.N))
         for i in non_zeros[0]:
@@ -78,7 +78,7 @@ class AttackRoutingSolver:
         A4 = matrix(np.repeat(tmp, N, axis=1))
         A5 = -spmatrix(tmp.flatten(), v, np.tile(J, N), (N, N*N))
 
-        A6 = A1 + A2 + A3 + A4 + A5 
+        A6 = A1 + A2 + A3 + A4 + A5
 
         I = np.array([0]*(N-1))
         J = np.array(range(self.k)+range((self.k+1),N)) + N * self.k
@@ -93,7 +93,7 @@ class AttackRoutingSolver:
 
 
     def flow_to_availabilities_routing(self, flow):
-        # convert the flow solution of the min cost flow problem back to 
+        # convert the flow solution of the min cost flow problem back to
         # availabilities and routing probabilities
         flow[range(self.N), range(self.N)] = 0.0
         # availabilities
@@ -111,31 +111,34 @@ class AttackRoutingSolver:
         lam = self.phi + self.nu
         N = self.N
         tmp = np.dot(np.diag(self.phi), self.delta).transpose()
-        out = 'Minimize\n  obj: '
-        for i in range(self.k) + range(self.k+1, N):
-            out = out + '{} a_{} + '.format(self.w[i], i)
-        out = out[:-3] + '\nSubject To\n  '
+
+
+        obj = ' + '.join(['{} a_{}'.format(self.w[i], i)
+                          for i in range(self.k) + range(self.k+1, N)])
+
+
         # equality constraints
+        cst = []
         for i in range(self.k) + range(self.k + 1, N):
+            eqn = []
             for j in range(i) + range(i+1, N):
-                out = out + '{} y_{}_{} - '.format(self.nu[j], j, i)
-                out = out + '{} y_{}_{} + '.format(lam[i], i, j)
-                if j != self.k: out = out + '{} a_{} + '.format(tmp[i,j], j)
-            out = out[:-2] + '= - {}\n  '.format(tmp[i,self.k])
+                eqn.append('{0} y_{3}_{2} - {1} y_{2}_{3}'\
+                            .format(self.nu[j], lam[i], i, j))
+                if j != self.k:
+                    eqn.append('{} a_{}'.format(tmp[i,j], j))
+            cst.append('{} = - {}'.format(' + '.join(eqn), tmp[i,self.k]))
+
         # constraints on the a_i
         for i in range(N):
-            for j in range(i) + range(i+1, N):
-                out = out + 'y_{}_{} + '.format(i,j)
-            if i == self.k:
-                out = out[:-2] + '= 1.0\n  '.format(i)
-            else:
-                out = out[:-2] + '- a_{} = 0.0\n  '.format(i)
+            eqn = ' + '.join(['y_{}_{}'.format(i,j)
+                              for j in range(i) + range(i+1, N)])
+            end = '= 1.0' if i == self.k else '- a_{} = 0.0'
+            cst.append(eqn + end.format(i))
+        cst = '\n  '.join(cst)
+
         # bounds
-        out = out[:-2] + 'Bounds\n  '
-        for i in range(N):
-            for j in range(i) + range(i+1, N):
-                out = out + '0 <= y_{}_{}\n  '.format(i,j)
-        out = out[:-2] + 'End'
-        return out
+        bnd = '\n  '.join(['0 <= y_{}_{}'.format(i,j)
+                           for i in range(N)
+                           for j in range(i) + range(i+1, N)])
 
-
+        return cplex_interface.template.format(obj, cst, bnd)
