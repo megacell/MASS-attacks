@@ -145,7 +145,7 @@ class Network:
         self.attack_rates = None
         self.attack_routing = None
         self.new_rates = self.rates
-        self.new_routing = self.routing        
+        self.new_routing = self.routing
 
 
     def opt_attack_routing(self, attack_rates, k, eps=1e-8, cplex=False):
@@ -173,11 +173,19 @@ class Network:
 
 
     def single_destination_attack(self, k):
-        # best attack that scales down all the availabilities 
+        # best attack that scales down all the availabilities
         # by the same factor except for k
         sol = SingleDestinationAttack(self, k).apply()
         self.update(sol['attack_rates'], sol['attack_routing'])
         return sol
+
+    def split_budget_attack(self):
+        # Splits budget amongst all stations and attack
+        rates = np.ones(self.size) / float(self.budget)
+        routing = np.array([[1 / (self.size - 1.) if i != j else 0
+                            for i in range(self.size)]
+                            for j in range(self.size)])
+        self.update(rates, routing)
 
 
     def best_single_destination_attack(self):

@@ -29,19 +29,20 @@ class OptimalAttackSolver:
         return np.sum(np.multiply(self.w, availabilities))
 
 
-    def solve(self, alpha=10., beta=1., max_iters_attack_rate=5):
+    def solve(self, alpha=10., beta=1., max_iters_attack_rate=5, split_budget=False):
         # solves using block-coordinate descent
         network = self.network
         eps, cplex =  self.eps, self.cplex
         # uses the single_destination_attack policy as a starting point
         print '============= initial objective value ============='
         print self.objective(network.new_availabilities())
-        if self.k is None:
-            k = network.best_single_destination_attack()
-            network.single_destination_attack(k)
+
+        k = network.best_single_destination_attack() if self.k is None else self.k
+        if spilt_budget:
+            network.split_budget_attack()
         else:
-            k = self.k
             network.single_destination_attack(k)
+
         print '============= after single_destination_attack ============='
         print self.objective(network.new_availabilities())
         for i in range(self.max_iters):
@@ -64,5 +65,3 @@ class OptimalAttackSolver:
 
         print network.attack_routing
         import pdb; pdb.set_trace()
-
-

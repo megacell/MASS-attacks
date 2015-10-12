@@ -6,6 +6,7 @@ import MAS_network as MAS
 import numpy as np
 from utils import generate_uniform, generate_asymmetric, is_equal
 import pickle as pkl
+import os.path
 
 __author__ = 'jeromethai'
 
@@ -160,15 +161,21 @@ class TestMasNetwork(unittest.TestCase):
         network.budget = 548 * 5.
         k = np.where(network.new_availabilities() - 1. == 0.0)[0][0]
         print k
-        #attack_rates = 5. * np.ones((network.size,))
-        #a, routing = network.opt_attack_routing(attack_rates, k, cplex=True)
-        #pkl.dump({'availabilities': a, 'attack_routing': routing, 'attack_rates':attack_rates}, open('data/attack_strategy.pkl', 'wb'))
-        attack = pkl.load(open('data/attack_strategy.pkl'))
+
+        pklfile = 'data/attack_strategy.pkl'
+        if not os.path.isfile(pklfile):
+            attack_rates = 5. * np.ones((network.size,))
+            a, routing = network.opt_attack_routing(attack_rates, k, cplex=True)
+            pkl.dump({'availabilities': a,
+                      'attack_routing': routing,
+                      'attack_rates':attack_rates},
+                     open(pklfile, 'wb'))
+        attack = pkl.load(open(pklfile))
         print 'availabilities before optmization', np.sum(attack['availabilities'])
         attack_routing = attack['attack_routing']
         nu_init = attack['attack_rates']
         network.opt_attack_rate(attack_routing, k, nu_init, alpha=10., beta=1., max_iters=10)
-        print 
+        print
         print 'availabilities after optmization', np.sum(network.new_availabilities())
         print np.max(network.new_availabilities())
         print np.where(network.new_availabilities() - 1. == 0.0)[0][0]
