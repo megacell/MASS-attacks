@@ -41,7 +41,7 @@ class TestMasNetwork(unittest.TestCase):
     def test_throughputs_2(self):
         # compute and check throughputs for asymmetric network
         network = MAS.Network(*generate_asymmetric())
-        self.assertTrue(is_equal(network.throughputs(), np.array([.25, .25, .5])))   
+        self.assertTrue(is_equal(network.throughputs(), np.array([.25, .25, .5])))
 
 
     def test_mean_travel_time(self):
@@ -54,7 +54,7 @@ class TestMasNetwork(unittest.TestCase):
         rates, routing, travel_times = generate_asymmetric()
         rates[0] = 2.
         network = MAS.Network(rates, routing, travel_times)
-        self.assertTrue(is_equal(network.availabilities(), np.array([.25, .5, 1.])))   
+        self.assertTrue(is_equal(network.availabilities(), np.array([.25, .5, 1.])))
 
 
     def test_balance(self):
@@ -82,7 +82,7 @@ class TestMasNetwork(unittest.TestCase):
         attack_rates = np.array([1., 1., 1.])
         # find routing minimizing the weighted sum of availabilities
         # fix the availability at station 2 to be equal to 1
-        k = 2 
+        k = 2
         # get the availabilities 'a' and routing that led to 'a'
         a, routing = network.opt_attack_routing(attack_rates, k)
         self.assertTrue(is_equal(a, network.new_availabilities()))
@@ -96,7 +96,7 @@ class TestMasNetwork(unittest.TestCase):
         attack_rates = np.array([1., 1., 0.])
         # find routing minimizing the weighted sum of availabilities
         # fix the availability at station 2 to be equal to 1
-        k = 2 
+        k = 2
         # get the availabilities 'a' and routing that led to 'a'
         a, routing = network.opt_attack_routing(attack_rates, k)
         self.assertTrue(is_equal(a, network.new_availabilities()))
@@ -129,7 +129,7 @@ class TestMasNetwork(unittest.TestCase):
         # trying with CPLEX, see test_attack_routing_2() above for more details
         network = MAS.Network(*generate_uniform())
         attack_rates = np.array([1., 1., 0.])
-        k = 2 
+        k = 2
         a, routing = network.opt_attack_routing(attack_rates, k, cplex=True)
         self.assertTrue(is_equal(a, network.new_availabilities()))
         self.assertTrue(abs(np.sum(a) - 5./3))
@@ -137,14 +137,14 @@ class TestMasNetwork(unittest.TestCase):
 
     # the following test is a bit slow, but should work!
 
-    # def test_cplex_attack_routing_full_network(self):
-    #     network = MAS.load_network('data/queueing_params.mat')
-    #     k = np.where(network.new_availabilities() - 1. == 0.0)[0][0]
-    #     print 'availabilities before attacks', np.sum(network.new_availabilities())
-    #     attack_rates = 5. * np.ones((network.size,))
-    #     a, routing = network.opt_attack_routing(attack_rates, k, cplex=True)
-    #     self.assertTrue(is_equal(a, network.new_availabilities()))
-    #     print 'availabilities after attacks', np.sum(network.new_availabilities())
+    def test_cplex_attack_routing_full_network(self):
+        network = MAS.load_network('data/queueing_params.mat')
+        k = np.where(network.new_availabilities() - 1. == 0.0)[0][0]
+        print 'availabilities before attacks', np.sum(network.new_availabilities())
+        attack_rates = 5. * np.ones((network.size,))
+        a, routing = network.opt_attack_routing(attack_rates, k, cplex=True)
+        self.assertTrue(is_equal(a, network.new_availabilities()))
+        print 'availabilities after attacks', np.sum(network.new_availabilities())
 
 
 

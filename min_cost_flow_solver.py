@@ -3,7 +3,6 @@ Minimum-cost-flow solver using cvxopt
 We refer to the following tutorial: http://cvxopt.org/examples/tutorial/lp.html
 '''
 
-
 import cplex_interface
 from cvxopt import matrix, spmatrix, sparse, solvers, spdiag
 import numpy as np
@@ -45,7 +44,7 @@ def cplex_solver(coeff, sources, adjacency):
     N = len(sources)
     open('tmp.lp', 'w').write(to_cplex_lp_file(coeff, sources))
     variables, sols = cplex_interface.solve_from_file('tmp.lp', 'o')
-    # reconstruct flow matrix from 'sols' returned by cplex solver 
+    # reconstruct flow matrix from 'sols' returned by cplex solver
     non_zeros = np.where(sols)
     flow = np.zeros((N,N))
     for i in non_zeros[0]:
@@ -58,20 +57,19 @@ def to_cplex_lp_file(coeff, sources):
     # generate input file for CPLEX solver
     # http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
     N = len(sources)
-    out = 'Minimize\n  obj: '
-    for i in range(N):
-        for j in range(N):
-            out = out + '{} x_{}_{} + '.format(coeff[i,j], i, j)
-    out = out[:-3] + '\nSubject To\n  '
+    # Objective
+    obj = '+'.join(['{} x_{}_{}'.format(coeff[i,j], i, j)
+                   for i in range(N)
+                   for j in range(N)])
+
     # equality constraints
-    for i in range(N):
-        for j in range(i) + range(i+1, N):
-            out = out + 'x_{}_{} - x_{}_{} + '.format(j, i, i, j)
-        out = out[:-2] + '= {}\n  '.format(sources[i])
+    cst = '\n  '.join(['+'.join(['x_{}_{} - x_{}_{}'.format(j, i, i, j)
+                                 for j in range(i) + range(i+1, N)])
+                        + '= {}'.format(sources[i])
+                       for i in range(N)])
     # bounds
-    out = out[:-2] + 'Bounds\n  '
-    for i in range(N):
-        for j in range(N):
-            out = out + '0 <= x_{}_{}\n  '.format(i,j)
-    out = out[:-2] + 'End'
-    return out
+    bnd = '\n  '.join(['0 <= x_{}_{}'.format(i,j)
+                       for i in range(N)
+                       for j in range(N)])
+
+    return cplex_interface.template.format(obj, cst, bnd)

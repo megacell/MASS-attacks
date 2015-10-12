@@ -38,6 +38,17 @@ import cplex
 from cplex.exceptions import CplexSolverError
 import sys
 
+template = \
+'''
+Minimize
+  obj: {}
+Subject To
+  {}
+Bounds
+  {}
+End
+'''
+
 def solve_from_file(filename, method):
 
     c = cplex.Cplex(filename)
