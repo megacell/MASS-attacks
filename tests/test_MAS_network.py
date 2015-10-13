@@ -156,34 +156,34 @@ class TestMasNetwork(unittest.TestCase):
         print network.new_availabilities()
 
 
-    def test_opt_attack_rate_full_network(self):
-        network = MAS.load_network('data/queueing_params.mat')
-        network.budget = 548 * 5.
-        k = np.where(network.new_availabilities() - 1. == 0.0)[0][0]
-        print k
+    # def test_opt_attack_rate_full_network(self):
+    #     network = MAS.load_network('data/queueing_params.mat')
+    #     network.budget = network.size * 5.
+    #     k = np.where(network.new_availabilities() - 1. == 0.0)[0][0]
+    #     print k
 
-        pklfile = 'data/attack_strategy.pkl'
-        if not os.path.isfile(pklfile):
-            attack_rates = 5. * np.ones((network.size,))
-            a, routing = network.opt_attack_routing(attack_rates, k, cplex=True)
-            pkl.dump({'availabilities': a,
-                      'attack_routing': routing,
-                      'attack_rates':attack_rates},
-                     open(pklfile, 'wb'))
-        attack = pkl.load(open(pklfile))
-        print 'availabilities before optmization', np.sum(attack['availabilities'])
-        attack_routing = attack['attack_routing']
-        nu_init = attack['attack_rates']
-        network.opt_attack_rate(attack_routing, k, nu_init, alpha=10., beta=1., max_iters=10)
-        print
-        print 'availabilities after optmization', np.sum(network.new_availabilities())
-        print np.max(network.new_availabilities())
-        print np.where(network.new_availabilities() - 1. == 0.0)[0][0]
+    #     pklfile = 'data/attack_strategy.pkl'
+    #     if not os.path.isfile(pklfile):
+    #         attack_rates = 5. * np.ones((network.size,))
+    #         a, routing = network.opt_attack_routing(attack_rates, k, cplex=True)
+    #         pkl.dump({'availabilities': a,
+    #                   'attack_routing': routing,
+    #                   'attack_rates':attack_rates},
+    #                  open(pklfile, 'wb'))
+    #     attack = pkl.load(open(pklfile))
+    #     print 'availabilities before optmization', np.sum(attack['availabilities'])
+    #     attack_routing = attack['attack_routing']
+    #     nu_init = attack['attack_rates']
+    #     network.opt_attack_rate(attack_routing, k, nu_init, alpha=10., beta=1., max_iters=10)
+    #     print
+    #     print 'availabilities after optmization', np.sum(network.new_availabilities())
+    #     print np.max(network.new_availabilities())
+    #     print np.where(network.new_availabilities() - 1. == 0.0)[0][0]
 
 
-    def test_set_weights_to_min_time_usage(self):
-        network = MAS.load_network('data/queueing_params.mat')
-        network.set_weights_to_min_time_usage()
+    # def test_set_weights_to_min_time_usage(self):
+    #     network = MAS.load_network('data/queueing_params.mat')
+    #     network.set_weights_to_min_time_usage()
 
 
     def test_single_destination_attack(self):
@@ -193,7 +193,7 @@ class TestMasNetwork(unittest.TestCase):
 
 
     def test_load_full_network_with_adjacency(self):
-        network = MAS.load_network('data/queueing_params_with_adjacency.mat')
+        network = MAS.load_network('data/queueing_params.mat')
         self.assertTrue(np.sum(network.adjacency) / (network.size * network.size) < 4.)
 
 
@@ -207,7 +207,7 @@ class TestMasNetwork(unittest.TestCase):
                                 [1, 0, 1, 1],
                                 [1, 1, 0, 1],
                                 [1, 1, 1, 0]])
-        network.adjacency = reachable_1
+        network.adjacency_1 = reachable_1
         self.assertTrue(is_equal(reachable_1.flatten(),
                                  network.get_adjacencies(1).flatten()))
         self.assertTrue(is_equal(reachable_2.flatten(),

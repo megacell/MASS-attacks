@@ -40,8 +40,10 @@ class AttackRateSolver:
 
     def check(self):
         # check if the attack_routing 'kappa' is valid
-        assert self.kappa.shape[0] == self.N, 'attack_routing is not network size on 0 axis'
-        assert self.kappa.shape[1] == self.N, 'attack_routing is not network size on 1 axis'
+        assert self.kappa.shape[0] == self.N, \
+            'attack_routing has {} rows but N = {}'.format(self.kappa.shape[0], self.N)
+        assert self.kappa.shape[1] == self.N, \
+            'attack_routing has {} rows but N = {}'.format(self.kappa.shape[1], self.N)
         assert is_equal(np.sum(self.kappa, axis=1), 1.0, self.eps), \
             'attack_routing not stochastic'
         self.check_nu(self.nu)

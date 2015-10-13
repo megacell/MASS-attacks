@@ -9,12 +9,13 @@ from attack_rate_solver import AttackRateSolver
 from min_attack_solver import MinAttackSolver
 from attack_routing_solver import AttackRoutingSolver
 from single_destination_attack import SingleDestinationAttack
+from optimal_attack_solver import OptimalAttackSolver
 
 __author__ = 'jeromethai'
 
 
 class Network:
-    def __init__(self, rates, routing, travel_times, adjacency=None):
+    def __init__(self, rates, routing, travel_times, adjacency_1=None):
         # Class for a Jackson network
         # rates        : numpy array with rates of arrival of passengers
         # routing      : numpy matrix for routing probabilitites
@@ -27,7 +28,8 @@ class Network:
         # compute adjacency matrix
         self.full_adjacency = np.ones((self.size, self.size))
         self.full_adjacency[range(self.size), range(self.size)] = 0.0
-        self.adjacency = adjacency
+        self.adjacency_1 = adjacency_1
+        self.adjacency = adjacency_1
         # attack rates and routing
         self.attack_rates = None
         self.attack_routing = None
@@ -159,16 +161,16 @@ class Network:
 
     def get_adjacencies(self, r):
         # Returns an adjacency matrix if we allow raduis r number of steps
-        assert self.adjacency is not None
+        assert self.adjacency_1 is not None
         assert type(r) == int and r > 0, 'Incorrect r'
         if r == 1:
-            return np.copy(self.adjacency)
+            return np.copy(self.adjacency_1)
         else:
             # Since the graph is undirected, if we can reach node i in at most r
             # steps, we can reach it in either r-1 steps (odd length path from
             # origin to i) or r steps (even length path from origin to i)
-            r_steps = np.linalg.matrix_power(self.adjacency, r)
-            r_minus_1_steps = np.linalg.matrix_power(self.adjacency, r - 1)
+            r_steps = np.linalg.matrix_power(self.adjacency_1, r)
+            r_minus_1_steps = np.linalg.matrix_power(self.adjacency_1, r - 1)
             res = r_steps + r_minus_1_steps
             norm_adjacencies(res)
             return res
@@ -235,6 +237,13 @@ class Network:
             if obj < min_obj:
                 best, min_obj = i, obj
         return best
+
+
+    def optimal_attack(self, max_iters=10, full_adj=True, eps=1e-8, cplex=True, \
+                        k=None, alpha=10., beta=1., max_iters_attack_rate=5):
+        oas = OptimalAttackSolver(self, max_iters, full_adj, eps, cplex, k)
+        oas.solve(alpha, beta, max_iters_attack_rate)
+
 
 
 def load_network(file_path):

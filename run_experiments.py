@@ -17,10 +17,9 @@ def cal_logo_experiment(adj):
 
     res = []
     for i in adj:
-        nw.full_adjacency = nw.get_adjacencies(i)
-        att_rates, att_routing = nw.min_attack(target, full_adj=True)
+        nw.update_adjacency(i)
+        att_rates, att_routing = nw.min_attack(target, full_adj=False)
         res.append(int(np.sum(att_rates)))
-
     print 'Passenger Arrival Rate:', np.sum(nw.rates)
     print 'Balance Cost: ', np.sum(bal_rates)
     print 'Attack After Balance Cost (adjacency {}): {}'.format(adj, res)
@@ -34,22 +33,19 @@ def optimal_attack_full_network():
     # we proceed so by choosing the best station to route the attacks to
     # which is the initialization, then there is not much room for progress
     # with the block-coordinate descent algorithm
+    nw = load_network('data/queueing_params.mat')
+    nw.balance()
+    nw.combine()
+    nw.budget = 200.
+    nw.optimal_attack(max_iters=3).solve(alpha=10., beta=1., max_iters_attack_rate=5)
+
+
+def optimal_attack_with_different_adjacencies():
+    # try to compute the optimal attacks with different radii of adjacencies
     network = load_network('data/queueing_params.mat')
-    network.budget = 200.
-    k = np.where(network.new_availabilities() - 1. == 0.0)[0][0]
-    network.balance(cplex=True)
-    print 'total customer rate', np.sum(network.rates)
-    print 'total rebalancing rate', np.sum(network.attack_rates)
-    network.combine()
-    print 'min availability', np.min(network.availabilities())
-    print 'combined customer and rebalancing rates', np.sum(network.rates)
-    oas = OptimalAttackSolver(network, max_iters=3)
-    oas.solve(alpha=10., beta=1., max_iters_attack_rate=5)
+    nw.balance()
+    nw.budget = 200.
 
-
-def optimal_attack_full_network_2():
-    network = load_network('data/queueing_params_with_adjacency.mat')
-    network.budget = 200.
 
 if __name__ == '__main__':
     cal_logo_experiment(range(1, 15))
