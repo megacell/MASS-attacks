@@ -1,7 +1,8 @@
 import csv
 import cfg as c
 import numpy as np
-import scipy.io as sio
+import heapq as hq
+import pickle
 from collections import defaultdict
 from pdb import set_trace as ST
 from utils import FeatureCollection, RBins
@@ -34,6 +35,52 @@ def is_adjacent(a, b):
     bx, by = get_xy(b)
     return int((ax - bx, ay - by) in ((1, 0), (0, 1), (-1, 0), (0, -1)))
 
+def is_set_adjacent(sa, sb):
+    for a in sa:
+        for b in sb:
+            if is_adjacent(a, b):
+                return 1
+    return 0
+
+def argmin(a):
+    i, n = min(enumerate(a), key= lambda x: x[1])
+    return i
+
+def cluster_stations(to_include):
+    to_include = set(to_include)
+    stations = [(int(row['pickups']), [row['station']])
+                for row in csv.DictReader(open(c.LAMBDA_FILE))
+                if row['station'] in to_include]
+    while min(stations)[0] < c.CLUSTER_FACTOR:
+        least_n, least_set, ai = min([(n, s, i)
+                                      for i, (n, s) in enumerate(stations)])
+
+        adj = [(n, s, i) for i, (n, s) in enumerate(stations)
+                         if is_set_adjacent(least_set, s) and i != ai]
+
+        an, aset, bi = min(adj)
+
+        stations.pop(max(ai, bi))
+        stations.pop(min(ai, bi))
+        stations.append((least_n + an, least_set + aset))
+
+    ss = set()
+    for n, s in stations:
+        ss.update(s)
+    assert(len(ss) == len(to_include))
+
+    fc = FeatureCollection()
+    for i, (an, aset) in enumerate(stations):
+        if len(aset) == 1: continue
+        for s in aset:
+            fc.add_polygon(rbs.get_poly(*get_xy(s)),
+                           {'n': an, 'i': i})
+    fc.dump('clusters.geojson')
+
+    new_include = [s[0] for n, s in stations]
+    clusters = {s[0]: s for n, s in stations}
+    return sorted(new_include), clusters
+
 def filter_data():
     total = []
     to_exclude = set(c.BLACKLIST)
@@ -63,8 +110,13 @@ def generate(filename):
     # Canonical order for output matrices
     to_include, to_exclude = filter_data()
 
+    to_include, clusters = cluster_stations(to_include)
+
+    inv_clusters = {s: s0 for s0, si in clusters.items() for s in si}
+
     # Final matrix to generate
-    mat = {'stations': np.array(to_include)}
+    mat = {'stations': np.array(to_include),
+           'clusters': clusters}
 
     # Generate lambda
     lam = {}
@@ -82,8 +134,13 @@ def generate(filename):
         pickup, dropoff = row['pickup'], row['dropoff']
         if pickup in to_exclude or dropoff in to_exclude:
             continue
-        T[pickup][dropoff] = float(row['trip_time_mean']) / c.TRIP_TIME_SCALE
-        p[pickup][dropoff] = int(row['counts'])
+        proj_p, proj_d = inv_clusters[pickup], inv_clusters[dropoff]
+        if proj_p == proj_d:
+            continue
+        T[proj_p][proj_d] = float(row['trip_time_mean']) / c.TRIP_TIME_SCALE \
+                            + T[proj_p].setdefault(proj_d, 0)
+        p[proj_p][proj_d] = int(row['counts']) \
+                            + p[proj_p].setdefault(proj_d, 0)
 
     # Convert p_ij into distribution and apply smoothing
     alpha = c.SMOOTHING_FACTOR
@@ -142,13 +199,16 @@ def generate(filename):
       .format( len(tmat) ** 2, failed, maxT)
 
     # Generate adjacency matrix
-
-    adj = np.array([[is_adjacent(o, d) for o in to_include] for d in to_include])
+    adj = np.array([[int(is_set_adjacent(clusters[o], clusters[d]) and (o != d))
+                     for o in to_include]
+                    for d in to_include])
+    assert adj.shape == (len(to_include), len(to_include)), \
+      'Dimensions of adjacency mismatch!'
     mat['adj'] = adj
 
-    sio.savemat(filename, mat)
+    pickle.dump(mat, open(filename, 'wb'))
     print 'Saved as: ' + filename
 
 
 if __name__ == '__main__':
-    generate('queueing_params.mat')
+    generate('queueing_params.pkl')

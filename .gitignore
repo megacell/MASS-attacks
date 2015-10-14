@@ -22,3 +22,4 @@ data/*
 !data/.gitkeep
 *.lp
 *.qml
+/param_inference/queueing_params.pkl

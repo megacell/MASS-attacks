@@ -10,7 +10,11 @@ import os.path
 
 __author__ = 'jeromethai'
 
+
+MAT_FILE = 'data/queueing_params.pkl'
+
 class TestMasNetwork(unittest.TestCase):
+
 
 
     def test_MAS_network(self):
@@ -106,7 +110,7 @@ class TestMasNetwork(unittest.TestCase):
 
 
     def test_load_network(self):
-        network = MAS.load_network('data/queueing_params.mat')
+        network = MAS.load_network(MAT_FILE)
         a = network.new_availabilities()
         #network.balance()
         #print network.new_availabilities()
@@ -122,7 +126,7 @@ class TestMasNetwork(unittest.TestCase):
 
     def test_cplex_balance_full_network(self):
         # loading the full network
-        network = MAS.load_network('data/queueing_params.mat')
+        network = MAS.load_network(MAT_FILE)
         network.balance(cplex=True)
         self.assertTrue(is_equal(network.new_availabilities(), np.ones((network.size,))))
 
@@ -138,7 +142,7 @@ class TestMasNetwork(unittest.TestCase):
 
 
     def test_cplex_attack_routing_full_network(self):
-        network = MAS.load_network('data/queueing_params.mat')
+        network = MAS.load_network(MAT_FILE)
         k = np.where(network.new_availabilities() - 1. == 0.0)[0][0]
         print 'availabilities before attacks', np.sum(network.new_availabilities())
         attack_rates = 5. * np.ones((network.size,))
@@ -167,7 +171,7 @@ class TestMasNetwork(unittest.TestCase):
 
 
     # def test_max_attack(self):
-    #     network = MAS.load_network('data/queueing_params.mat')
+    #     network = MAS.load_network(MAT_FILE)
     #     network.budget = 200.0
     #     target = np.random.rand(network.size,)
     #     network.max_attack(target / np.max(target))
@@ -178,7 +182,7 @@ class TestMasNetwork(unittest.TestCase):
 
 
     # def test_opt_attack_rate_full_network(self):
-    #     network = MAS.load_network('data/queueing_params.mat')
+    #     network = MAS.load_network(MAT_FILE)
     #     network.budget = network.size * 5.
     #     k = np.where(network.new_availabilities() - 1. == 0.0)[0][0]
     #     print k
@@ -203,7 +207,7 @@ class TestMasNetwork(unittest.TestCase):
 
 
     # def test_set_weights_to_min_time_usage(self):
-    #     network = MAS.load_network('data/queueing_params.mat')
+    #     network = MAS.load_network(MAT_FILE)
     #     network.set_weights_to_min_time_usage()
 
 
@@ -214,7 +218,7 @@ class TestMasNetwork(unittest.TestCase):
 
 
     def test_load_full_network_with_adjacency(self):
-        network = MAS.load_network('data/queueing_params.mat')
+        network = MAS.load_network(MAT_FILE)
         self.assertTrue(np.sum(network.adjacency) / (network.size * network.size) < 4.)
 
 
