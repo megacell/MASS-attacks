@@ -44,8 +44,9 @@ class AttackRateSolver:
             'attack_routing has {} rows but N = {}'.format(self.kappa.shape[0], self.N)
         assert self.kappa.shape[1] == self.N, \
             'attack_routing has {} rows but N = {}'.format(self.kappa.shape[1], self.N)
+        assert np.min(self.kappa) >= 0.0
         assert is_equal(np.sum(self.kappa, axis=1), 1.0, self.eps), \
-            'attack_routing not stochastic'
+            'attack_routing not stochastic {}'.format(np.sum(self.kappa, axis=1))
         self.check_nu(self.nu)
 
 

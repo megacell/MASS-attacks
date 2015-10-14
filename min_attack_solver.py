@@ -20,6 +20,7 @@ class MinAttackSolver:
         self.eps = eps
         self.cplex = cplex
         self.N = network.size
+        self.full_adj = full_adj
         self.adj = network.full_adjacency if full_adj else network.adjacency
         self.check()
 
@@ -49,7 +50,7 @@ class MinAttackSolver:
         return coeff, sources
 
 
-    def flow_to_rates_routing(self, flow):
+    def flow_to_rates_routing(self, flow, previous_routing=None):
         # convert the flow solution of the min cost flow problem
         # back into rates
         # makes sure that the diagonal is equal to zero
@@ -58,14 +59,16 @@ class MinAttackSolver:
         opt_rates = np.divide(np.sum(flow, 1), self.a)
         # convert the flow into routing
         tmp = np.multiply(opt_rates, self.a)
-        zeroes = np.where(tmp < self.eps)
-        tmp[zeroes] = N - 1.
-        flow[zeroes, :] = 1.
+        zeroes = np.where(tmp < self.eps)[0]
+        tmp[zeroes] = np.sum(self.adj[zeroes,:], axis=1)
+        #adj = self.adj
+        flow[zeroes, :] = self.adj[zeroes,:]
         flow[range(N), range(N)] = 0.0
         inverse_tmp = np.divide(np.ones((N,)), tmp)
         opt_routing = np.dot(np.diag(inverse_tmp), flow)
         opt_rates[opt_rates < 0.0] = 0.0
-        opt_routing[opt_routing < 0.0] = 0.0
+        opt_routing[opt_routing < 0.0] = 0.
+        #import pdb; pdb.set_trace()
         return opt_rates, opt_routing
 
 

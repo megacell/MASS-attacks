@@ -84,6 +84,11 @@ class Network:
                 "diagonal of routing matrix not null"
 
 
+    def re_normalize_attack_routing(self):
+            tmp = np.divide(np.ones((self.size,)), np.sum(self.attack_routing, axis=1))
+            self.attack_routing = np.dot(np.diag(tmp), self.attack_routing)
+
+
     def set_weights_to_min_time_usage(self):
         # set weights to minimize the time usage of the network
         tmp = np.multiply(self.routing, self.travel_times)
@@ -129,7 +134,7 @@ class Network:
         assert np.max(target) == 1.0, 'max(target) > 1.0'
         assert np.min(target) >= eps, 'target not positive'
         cost = np.ones((self.size, self.size))
-        opt_rates, opt_routing = MinAttackSolver(self, target, cost, full_adj, eps, cplex).solve()
+        opt_rates, opt_routing = MinAttackSolver(self, target, cost, full_adj=full_adj, eps=eps, cplex=cplex).solve()
         # update the network
         self.update(opt_rates, opt_routing)
         return opt_rates, opt_routing
@@ -181,6 +186,11 @@ class Network:
         self.adjacency = self.get_adjacencies(r)
 
 
+    def verify_adjacency(self):
+        # return True if it respects the adjacency matrix
+        return np.sum(np.multiply(self.attack_routing, 1.0-self.adjacency)) == 0.0
+
+
     def opt_attack_routing(self, attack_rates, k, full_adj=True, eps=1e-8, cplex=True):
         # given fixed attack_rates
         # find the best routing of attacks
@@ -216,9 +226,11 @@ class Network:
     def split_budget_attack(self):
         # Splits budget amongst all stations and attack
         rates = np.ones(self.size) / float(self.budget)
-        routing = np.array([[1 / (self.size - 1.) if i != j else 0
-                            for i in range(self.size)]
-                            for j in range(self.size)])
+        tmp = np.divide(np.ones((self.size,)), np.sum(self.adjacency, axis=1))
+        routing = np.dot(np.diag(tmp), self.adjacency)
+        # routing = np.array([[1 / (self.size - 1.) if i != j else 0
+        #                     for i in range(self.size)]
+        #                     for j in range(self.size)])
         self.update(rates, routing)
 
 
@@ -243,7 +255,6 @@ class Network:
                         k=None, alpha=10., beta=1., max_iters_attack_rate=5):
         oas = OptimalAttackSolver(self, max_iters, full_adj, eps, cplex, k)
         oas.solve(alpha, beta, max_iters_attack_rate)
-
 
 
 def load_network(file_path):
