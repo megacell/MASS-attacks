@@ -35,8 +35,10 @@ def generate_asymmetric():
 
 
 def r_2_pi(routing, eps=1e-8):
+    eps = 1e-6 # fix this
     # compute the stationary distribution given a routing matrix
     eigenvalues, eigenvectors = np.linalg.eig(routing.transpose())
+    assert abs(np.max(eigenvalues)-1.0) < eps, 'max eigenvalue is {}'.format(np.max(eigenvalues))
     index = np.argwhere(abs(eigenvalues - 1.0) < eps)[0][0]
     pi = np.real(eigenvectors[:, index])
     return pi / np.sum(pi)

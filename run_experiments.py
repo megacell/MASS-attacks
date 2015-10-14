@@ -45,6 +45,7 @@ def optimal_attack_full_network():
 def optimal_attack_with_radius(r):
     # try to compute the optimal attacks with different radii of adjacencies
     nw = load_network('data/queueing_params.mat')
+    nw.set_weights_to_min_time_usage()
     nw.balance()
     nw.combine()
     nw.budget = 1000.
@@ -72,4 +73,4 @@ if __name__ == '__main__':
     # cal_logo_experiment(range(1, 15))
     # optimal_attack_full_network()
     optimal_attack_with_radius(5)
-    network_simulation()
+    # network_simulation()
