@@ -37,27 +37,35 @@ class OptimalAttackSolver:
         # uses the single_destination_attack policy as a starting point
         print '============= initial objective value ============='
         print self.objective(network.new_availabilities())
-
         k = network.best_single_destination_attack() if self.k is None else self.k
-        if split_budget:
-            network.split_budget_attack()
-        else:
-            network.single_destination_attack(k)
+        print 'station {} is fixed to be equal to 1'.format(k)
 
-        print '============= after single_destination_attack ============='
+        if full_adj:
+            network.single_destination_attack(k)
+        else:
+            network.split_budget_attack()
+        print '============= after initialization ============='
+        # import pdb; pdb.set_trace()
+        assert network.verify_adjacency() == True
         print self.objective(network.new_availabilities())
         for i in range(self.max_iters):
             print ' ============= iter ============='
             print i
             network.opt_attack_routing(network.attack_rates, k, full_adj, eps, cplex)
+            network.re_normalize_attack_routing()
             print '============= after opt_attack_routing ============='
+            assert network.verify_adjacency() == True
             print self.objective(network.new_availabilities())
             network.min_attack(network.new_availabilities(), full_adj, eps, cplex)
+            network.re_normalize_attack_routing()
             print '============= after min_attack ============='
+            #import pdb; pdb.set_trace()
+            assert network.verify_adjacency() == True
             print self.objective(network.new_availabilities())
             network.opt_attack_rate(network.attack_routing, k, network.attack_rates, \
                     alpha, beta, max_iters_attack_rate, eps)
-            print '============= apply opt_attack_rate ============='
+            print '============= after opt_attack_rate ============='
+            assert network.verify_adjacency() == True
             print self.objective(network.new_availabilities())
             print '============= max budget ============= '
             print network.budget

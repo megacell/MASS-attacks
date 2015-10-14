@@ -43,16 +43,21 @@ def optimal_attack_full_network():
     nw = load_network('data/queueing_params.mat')
     nw.balance()
     nw.combine()
-    nw.budget = 200.
-    nw.optimal_attack(max_iters=2).solve(alpha=10., beta=1., max_iters_attack_rate=5)
-    t()
+    nw.budget = 20.
+    nw.optimal_attack(max_iters=3, alpha=10., beta=1., max_iters_attack_rate=5)
 
 
-def optimal_attack_with_different_adjacencies():
+def optimal_attack_with_radius(r):
     # try to compute the optimal attacks with different radii of adjacencies
-    network = load_network('data/queueing_params.mat')
+    nw = load_network('data/queueing_params.mat')
     nw.balance()
-    nw.budget = 200.
+    nw.combine()
+    nw.budget = 1000.
+    nw.update_adjacency(r)
+    # k has been pre-processed and is given by best_single_destination_attack()
+    k = 302
+    nw.optimal_attack(max_iters=3, full_adj=False, alpha=10., beta=1., \
+                            max_iters_attack_rate=5, k=k)
 
 def network_simulation():
     nw = load_network('data/queueing_params.mat')
@@ -79,5 +84,6 @@ def draw_on_network(filename):
 if __name__ == '__main__':
     # cal_logo_experiment(range(1, 15))
     # optimal_attack_full_network()
-    #network_simulation()
     draw_on_network('tmp.pkl')
+    optimal_attack_with_radius(5)
+    #network_simulation()
