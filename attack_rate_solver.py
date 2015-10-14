@@ -5,21 +5,23 @@ Optimizing for the Optimal Attack problem with the attack routing probabilities 
 
 
 import numpy as np
-from utils import is_equal, pi_2_a, r_2_pi, simplex_projection
+from utils import is_equal, pi_2_a, r_2_pi, simplex_projection, ball1_projection
 
 
 __author__ = 'jeromethai'
 
 
 class AttackRateSolver:
-    def __init__(self, network, attack_routing, k, nu_init, eps=1e-8):
+    def __init__(self, network, attack_routing, k, nu_init, omega=0.0, eps=1e-8):
         # Class for the Attack Rate Solver
         self.network = network
         self.kappa = attack_routing # the attack routing is fixed
         self.phi = network.rates # rates before the attacks
         self.delta = network.routing # routing prob. before attacks
         self.k = k # availability at station k is set to 1
-        self.nu = nu_init # nu_init is the initial rate of attacks
+        self.nu = nu_init # nu_init is the initial rate of 
+        self.nu_less_k = np.delete(nu_init, k)
+        self.omega = omega
         self.eps = eps
         self.N = network.size
         self.w = network.weights # weights for the availabilities in the obj
@@ -59,6 +61,8 @@ class AttackRateSolver:
     def update(self, nu, obj, a):
         # update with the current nu, obj, and availabilities 'a'
         self.nu = nu
+        self.nu_less_k = np.delete(nu, self.k)
+        if self.omega>0.0: obj = obj[0]
         self.obj_values.append(obj)
         self.a = a
         self.iter = self.iter + 1
@@ -77,6 +81,7 @@ class AttackRateSolver:
         a = pi_2_a(pi, lam)
         # compute the objective
         obj = np.sum(np.multiply(self.w, a))
+        obj = obj if self.omega==0.0 else (obj, np.sum(np.multiply(self.nu, a)))
         return obj, a
 
 
@@ -96,7 +101,9 @@ class AttackRateSolver:
             b[i] = b[i] - a[i]
             # remove k-th entry because a_k is set to 1 and solve the equations
             jacobian.append(np.linalg.solve(A, np.delete(b, self.k)))
-        return np.dot(np.array(jacobian), self.w_less_k)
+        g = np.dot(np.array(jacobian), self.w_less_k - self.omega * self.nu_less_k)
+        g = g - self.omega * a
+        return g
 
 
     def make_stop(self, max_iter=100, min_progress=1e-5):
@@ -114,7 +121,8 @@ class AttackRateSolver:
         self.init_solver()
         for i in range(self.max_iters):
             g = self.gradient()
-            nu = simplex_projection(self.nu - step() * g, self.b)
+            nu = ball1_projection(self.nu - step() * g, self.b)
+            # nu = simplex_projection(self.nu - step() * g, self.b)
             obj, a = self.objective(nu)
             self.update(nu, obj, a)
             if stop(): break

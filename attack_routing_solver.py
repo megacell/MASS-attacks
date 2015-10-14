@@ -13,12 +13,13 @@ __author__ = 'jeromethai'
 
 class AttackRoutingSolver:
     # class for computing the best attacks with the rate of attacks fixed
-    def __init__(self, network, attack_rates, k, full_adj=True, eps=1e-8, cplex=True):
+    def __init__(self, network, attack_rates, k, full_adj=True, omega=0, eps=1e-8, cplex=True):
         self.network = network
         self.nu = attack_rates # fixed attack rate
         self.phi = self.network.rates # rates before the attacks
         self.delta = network.routing # routing prob. before attacks
         self.k = k # a_k is set to 1
+        self.omega = omega
         self.eps = eps
         self.cplex = cplex
         self.N = network.size
@@ -115,10 +116,18 @@ class AttackRoutingSolver:
         N = self.N
         tmp = np.dot(np.diag(self.phi), self.delta).transpose()
 
-
-        obj = ' + '.join(['{} a_{}'.format(self.w[i], i)
+        if self.omega==0.0:
+            obj = ' + '.join(['{} a_{}'.format(self.w[i], i)
                           for i in range(self.k) + range(self.k+1, N)])
+        else:
+            obj1 = ' + '.join(['{} a_{}'.format(self.w[i] - self.omega * self.nu[i], i)
+                          for i in range(self.k) + range(self.k+1, N)
+                          if self.w[i] - self.omega * self.nu[i] >= 0.0]) 
 
+            obj2 = ' '.join(['{} a_{}'.format(self.w[i] - self.omega * self.nu[i], i)
+                          for i in range(self.k) + range(self.k+1, N)
+                          if self.w[i] - self.omega * self.nu[i] < 0.0])      
+            obj = obj2 + ' + ' + obj1
 
         # equality constraints
         cst = []
