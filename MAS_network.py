@@ -254,9 +254,10 @@ class Network:
         return best
 
 
-    def optimal_attack(self, max_iters=10, full_adj=True, eps=1e-8, cplex=True, \
+    def optimal_attack(self, max_iters=10, full_adj=True, omega=0.0, \
+                        eps=1e-8, cplex=True, \
                         k=None, alpha=10., beta=1., max_iters_attack_rate=5):
-        oas = OptimalAttackSolver(self, max_iters, full_adj, eps, cplex, k)
+        oas = OptimalAttackSolver(self, max_iters, full_adj, omega, eps, cplex, k)
         oas.solve(alpha, beta, max_iters_attack_rate)
 
 

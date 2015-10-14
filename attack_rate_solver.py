@@ -62,6 +62,7 @@ class AttackRateSolver:
         # update with the current nu, obj, and availabilities 'a'
         self.nu = nu
         self.nu_less_k = np.delete(nu, self.k)
+        if self.omega>0.0: obj = obj[0]
         self.obj_values.append(obj)
         self.a = a
         self.iter = self.iter + 1

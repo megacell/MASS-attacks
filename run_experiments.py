@@ -67,6 +67,19 @@ def optimal_attack_with_radius(r, save_to=None):
         obj = {'rates': rates, 'routing': nw.attack_routing}
         pickle.dump(obj, open(save_to, 'wb'))
 
+
+def optimal_attack_with_max_throughput():
+    nw = load_network('data/queueing_params.mat')
+    nw.rates = nw.rates + 50.*np.ones((nw.size,))
+    nw.balance()
+    nw.combine()
+    nw.budget = 1000
+    k = 86
+    nw.optimal_attack(omega=0.0, max_iters=3, alpha=10., beta=1., \
+                max_iters_attack_rate=5, k=k)
+
+
+
 def network_simulation():
     nw = load_network('data/queueing_params.mat')
     target = get_availabilities(nw.station_names)
@@ -81,12 +94,14 @@ def network_simulation():
         n.jump()
     T()
 
+
 def draw_rates(filename):
     fc = FeatureCollection()
     rates = pickle.load(open(filename))['rates']
     for weight, station in zip(rates, sio.loadmat(MAT_FILE)['stations']):
         fc.add_polygon(rbs.get_poly(*get_xy(station)), {'weight': weight})
     fc.dump('rates.geojson')
+
 
 def draw_routing(filename, dir):
     fc = FeatureCollection()
@@ -101,13 +116,15 @@ def draw_routing(filename, dir):
         fc.add_polygon(rbs.get_poly(sx, sy), {'weight': total})
     fc.dump('routing.geojson')
 
+
 if __name__ == '__main__':
-    # k = 86
+    # k = 86 for grand central terminal, and k = 302 for a section with small lam
     # cal_logo_experiment(range(1, 15))
     # optimal_attack_full_network()
     # optimal_attack_with_radius(5)
     # network_simulation()
     #optimal_attack_with_radius(5, save_to='tmp1.pkl')
-    draw_rates('tmp1.pkl')
-    draw_routing('tmp1.pkl', 1)
+    #draw_rates('tmp1.pkl')
+    #draw_routing('tmp1.pkl', 1)
     #network_simulation()
+    optimal_attack_with_max_throughput()

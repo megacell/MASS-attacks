@@ -116,10 +116,18 @@ class AttackRoutingSolver:
         N = self.N
         tmp = np.dot(np.diag(self.phi), self.delta).transpose()
 
-
-        obj = ' + '.join(['{} a_{}'.format(self.w[i] - self.omega * self.nu[i], i)
+        if self.omega==0.0:
+            obj = ' + '.join(['{} a_{}'.format(self.w[i], i)
                           for i in range(self.k) + range(self.k+1, N)])
+        else:
+            obj1 = ' + '.join(['{} a_{}'.format(self.w[i] - self.omega * self.nu[i], i)
+                          for i in range(self.k) + range(self.k+1, N)
+                          if self.w[i] - self.omega * self.nu[i] >= 0.0]) 
 
+            obj2 = ' '.join(['{} a_{}'.format(self.w[i] - self.omega * self.nu[i], i)
+                          for i in range(self.k) + range(self.k+1, N)
+                          if self.w[i] - self.omega * self.nu[i] < 0.0])      
+            obj = obj2 + ' + ' + obj1
 
         # equality constraints
         cst = []

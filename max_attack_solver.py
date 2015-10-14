@@ -78,7 +78,7 @@ class MaxAttackSolver:
     def cplex_solver(self):
         open('tmp.lp', 'w').write(self.to_cplex_lp_file())
         "solver to be feeded to CPLEX for max_attack"
-        print self.to_cplex_lp_file()
+        # print self.to_cplex_lp_file()
         variables, sols = cplex_interface.solve_from_file('tmp.lp', 'o')
         non_zeros = np.where(sols)
         flow = np.zeros((self.N,self.N))
