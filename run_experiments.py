@@ -50,6 +50,7 @@ def optimal_attack_full_network():
 def optimal_attack_with_radius(r, save_to=None):
     # try to compute the optimal attacks with different radii of adjacencies
     nw = load_network('data/queueing_params.mat')
+    nw.set_weights_to_min_time_usage()
     #nw.rates += np.ones(nw.size) * 100
     nw.balance()
     nw.combine()
@@ -57,10 +58,11 @@ def optimal_attack_with_radius(r, save_to=None):
     nw.update_adjacency(r)
     # k has been pre-processed and is given by best_single_destination_attack()
     k = 302
-    nw.optimal_attack(max_iters=2, full_adj=False, alpha=10., beta=1., \
+    nw.optimal_attack(max_iters=1, full_adj=False, alpha=10., beta=1., \
                             max_iters_attack_rate=3, k=k)
 
     rates = nw.attack_rates / (nw.attack_rates + nw.rates)
+    T()
     if save_to:
         obj = {'rates': rates, 'routing': nw.attack_routing}
         pickle.dump(obj, open(save_to, 'wb'))
