@@ -49,6 +49,79 @@ Bounds
 End
 '''
 
+def solve_qp_from_file(filename, method):
+
+    c = cplex.Cplex(filename)
+
+    if c.get_problem_type() != c.problem_type.QP:
+        print("Input file is not a QP.  Exiting.")
+        return
+
+    alg = c.parameters.qpmethod.values
+
+    if method == "o":
+        c.parameters.qpmethod.set(alg.auto)
+    elif method == "p":
+        c.parameters.qpmethod.set(alg.primal)
+    elif method == "d":
+        c.parameters.qpmethod.set(alg.dual)
+    elif method == "n":
+        c.parameters.qpmethod.set(alg.network)
+    elif method == "b":
+        c.parameters.qpmethod.set(alg.barrier)
+        c.parameters.barrier.crossover.set(c.parameters.barrier.crossover.values.none)
+    else:
+        print("Unrecognized option, using automatic")
+        c.parameters.qpmethod.set(alg.auto)
+
+    try:
+        c.solve()
+    except CplexSolverError:
+        print("Exception raised during solve")
+        return
+
+
+    # solution.get_status() returns an integer code
+    status = c.solution.get_status()
+    print(c.solution.status[status])
+    if status == c.solution.status.unbounded:
+        print("Model is unbounded")
+        return
+    if status == c.solution.status.infeasible:
+        print("Model is infeasible")
+        return
+    if status == c.solution.status.infeasible_or_unbounded:
+        print("Model is infeasible or unbounded")
+        return
+
+    s_method = c.solution.get_method()
+    s_type   = c.solution.get_solution_type()
+
+    print("Solution status = " , status, ":", end=' ')
+    # the following line prints the status as a string
+    print(c.solution.status[status])
+    print("Solution method = ", s_method, ":", end=' ')
+    print(c.solution.method[s_method])
+
+    if s_type == c.solution.type.none:
+        print("No solution available")
+        return
+    print("Objective value = " , c.solution.get_objective_value())
+
+    if s_type == c.solution.type.basic:
+        basis = c.solution.basis.get_col_basis()
+    else:
+        basis = None
+
+    print()
+
+    x = c.solution.get_values(0, c.variables.get_num()-1)
+
+    infeas = c.solution.get_float_quality(c.solution.quality_metric.max_primal_infeasibility)
+    print("Maximum bound violation = ", infeas)
+
+    return c.variables.get_names(), c.solution.get_values()
+
 def solve_from_file(filename, method):
 
     c = cplex.Cplex(filename)
@@ -154,4 +227,4 @@ if __name__ == "__main__":
         print("             s sifting")
         print("             c concurrent")
         sys.exit(-1)
-    lpex2(sys.argv[1], sys.argv[2])
+    print(solve_qp_from_file(sys.argv[1], sys.argv[2]))
