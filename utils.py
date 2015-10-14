@@ -57,12 +57,20 @@ def is_equal(a, b, eps=1e-8):
         print 'Not equal: ', a, b
     return res
 
+
+def ball1_projection(v, z=1):
+    v[v<0.0]=0.0
+    if np.sum(v) <= z: return v
+    return simplex_projection(v, z)
+
+
 def simplex_projection(v, z=1):
     ''' Projects vector v of dimension n onto the n-dimensional simplex
 
     Taken from: Efficient projections onto the l1 ball for learning in higher
                 dimensions, Duchi et.al.
     '''
+    v[v<0.0]=0.0
     n = len(v)
     mu = sorted(v, reverse=True)
     musum = np.cumsum(mu)

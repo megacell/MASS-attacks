@@ -5,7 +5,7 @@ Optimizing for the Optimal Attack problem with the attack routing probabilities 
 
 
 import numpy as np
-from utils import is_equal, pi_2_a, r_2_pi, simplex_projection
+from utils import is_equal, pi_2_a, r_2_pi, simplex_projection, ball1_projection
 
 
 __author__ = 'jeromethai'
@@ -121,7 +121,8 @@ class AttackRateSolver:
         self.init_solver()
         for i in range(self.max_iters):
             g = self.gradient()
-            nu = simplex_projection(self.nu - step() * g, self.b)
+            nu = ball1_projection(self.nu - step() * g, self.b)
+            # nu = simplex_projection(self.nu - step() * g, self.b)
             obj, a = self.objective(nu)
             self.update(nu, obj, a)
             if stop(): break
