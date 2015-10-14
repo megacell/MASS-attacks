@@ -73,4 +73,3 @@ class OptimalAttackSolver:
             print np.sum(network.attack_rates)
 
         print network.attack_routing
-        import pdb; pdb.set_trace()

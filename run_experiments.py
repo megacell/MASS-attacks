@@ -47,17 +47,23 @@ def optimal_attack_full_network():
     nw.optimal_attack(max_iters=3, alpha=10., beta=1., max_iters_attack_rate=5)
 
 
-def optimal_attack_with_radius(r):
+def optimal_attack_with_radius(r, save_to=None):
     # try to compute the optimal attacks with different radii of adjacencies
     nw = load_network('data/queueing_params.mat')
+    #nw.rates += np.ones(nw.size) * 100
     nw.balance()
     nw.combine()
-    nw.budget = 1000.
+    nw.budget = 1000
     nw.update_adjacency(r)
     # k has been pre-processed and is given by best_single_destination_attack()
     k = 302
-    nw.optimal_attack(max_iters=3, full_adj=False, alpha=10., beta=1., \
-                            max_iters_attack_rate=5, k=k)
+    nw.optimal_attack(max_iters=2, full_adj=False, alpha=10., beta=1., \
+                            max_iters_attack_rate=3, k=k)
+
+    rates = nw.attack_rates / (nw.attack_rates + nw.rates)
+    if save_to:
+        obj = {'rates': rates, 'routing': nw.attack_routing}
+        pickle.dump(obj, open(save_to, 'wb'))
 
 def network_simulation():
     nw = load_network('data/queueing_params.mat')
@@ -73,17 +79,31 @@ def network_simulation():
         n.jump()
     T()
 
-def draw_on_network(filename):
+def draw_rates(filename):
     fc = FeatureCollection()
-    for weight, station in zip(pickle.load(open(filename)),
-                               sio.loadmat(MAT_FILE)['stations']):
-        fc.add_polygon(rbs.get_poly(*get_xy(station)),
-                       {'weight': weight})
-    fc.dump('tmp1.geojson')
+    rates = pickle.load(open(filename))['rates']
+    for weight, station in zip(rates, sio.loadmat(MAT_FILE)['stations']):
+        fc.add_polygon(rbs.get_poly(*get_xy(station)), {'weight': weight})
+    fc.dump('rates.geojson')
+
+def draw_routing(filename, dir):
+    fc = FeatureCollection()
+    routing = pickle.load(open(filename))['routing']
+    stations = map(get_xy, sio.loadmat(MAT_FILE)['stations'])
+    for row, (sx, sy) in zip(routing, stations):
+        total = 0
+        for rate, (ex, ey) in zip(row, stations):
+            dx, dy = ex - sx, ey - sy
+            if dx > 0:
+                total += rate * dx / np.sqrt(dx**2 + dy**2)
+        fc.add_polygon(rbs.get_poly(sx, sy), {'weight': total})
+    fc.dump('routing.geojson')
 
 if __name__ == '__main__':
     # cal_logo_experiment(range(1, 15))
     # optimal_attack_full_network()
-    draw_on_network('tmp.pkl')
-    optimal_attack_with_radius(5)
+
+    optimal_attack_with_radius(2, save_to='tmp1.pkl')
+    draw_rates('tmp1.pkl')
+    draw_routing('tmp1.pkl', 1)
     #network_simulation()
