@@ -55,14 +55,15 @@ def optimal_attack_with_radius(r, save_to=None):
     nw.balance()
     nw.combine()
     nw.budget = 1000
-    nw.update_adjacency(r)
+    if r > 0:
+        nw.update_adjacency(r)
     # k has been pre-processed and is given by best_single_destination_attack()
-    k = 302
+    k = 442 #86 #386 #129
     nw.optimal_attack(max_iters=1, full_adj=False, alpha=10., beta=1., \
                             max_iters_attack_rate=3, k=k)
 
     rates = nw.attack_rates / (nw.attack_rates + nw.rates)
-    T()
+
     if save_to:
         obj = {'rates': rates, 'routing': nw.attack_routing}
         pickle.dump(obj, open(save_to, 'wb'))
@@ -79,7 +80,6 @@ def network_simulation():
         if i % 10 == 0:
             print i
         n.jump()
-    T()
 
 def draw_rates(filename):
     fc = FeatureCollection()
@@ -92,6 +92,7 @@ def draw_routing(filename, dir):
     fc = FeatureCollection()
     routing = pickle.load(open(filename))['routing']
     stations = map(get_xy, sio.loadmat(MAT_FILE)['stations'])
+
     for row, (sx, sy) in zip(routing, stations):
         total = 0
         for rate, (ex, ey) in zip(row, stations):
@@ -104,9 +105,10 @@ def draw_routing(filename, dir):
 if __name__ == '__main__':
     # cal_logo_experiment(range(1, 15))
     # optimal_attack_full_network()
-    optimal_attack_with_radius(5)
+    # optimal_attack_with_radius(5)
     # network_simulation()
-    # optimal_attack_with_radius(2, save_to='tmp1.pkl')
-    # draw_rates('tmp1.pkl')
-    # draw_routing('tmp1.pkl', 1)
-    #network_simulation()
+    optimal_attack_with_radius(0, save_to='tmp1.pkl')
+    T()
+    draw_rates('tmp1.pkl')
+    draw_routing('tmp1.pkl', 1)
+    # network_simulation()
