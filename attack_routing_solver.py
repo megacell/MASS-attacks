@@ -13,12 +13,13 @@ __author__ = 'jeromethai'
 
 class AttackRoutingSolver:
     # class for computing the best attacks with the rate of attacks fixed
-    def __init__(self, network, attack_rates, k, full_adj=True, eps=1e-8, cplex=True):
+    def __init__(self, network, attack_rates, k, full_adj=True, omega=0, eps=1e-8, cplex=True):
         self.network = network
         self.nu = attack_rates # fixed attack rate
         self.phi = self.network.rates # rates before the attacks
         self.delta = network.routing # routing prob. before attacks
         self.k = k # a_k is set to 1
+        self.omega = omega
         self.eps = eps
         self.cplex = cplex
         self.N = network.size
@@ -116,7 +117,7 @@ class AttackRoutingSolver:
         tmp = np.dot(np.diag(self.phi), self.delta).transpose()
 
 
-        obj = ' + '.join(['{} a_{}'.format(self.w[i], i)
+        obj = ' + '.join(['{} a_{}'.format(self.w[i] - self.omega * self.nu[i], i)
                           for i in range(self.k) + range(self.k+1, N)])
 
 

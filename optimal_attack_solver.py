@@ -14,9 +14,11 @@ __author__ = 'jeromethai'
 
 class OptimalAttackSolver:
     # class for the optimal attack solver
-    def __init__(self, network, max_iters=10, full_adj=True, eps=1e-8, cplex=True, k=None):
+    def __init__(self, network, max_iters=10, full_adj=True, eps=1e-8, cplex=True, \
+                    k=None, omega=0):
         self.network = network
         self.k = k
+        self.omega = omega
         self.N = network.size
         self.eps = eps
         self.cplex = cplex
@@ -34,6 +36,7 @@ class OptimalAttackSolver:
         # solves using block-coordinate descent
         network = self.network
         full_adj, eps, cplex =  self.full_adj, self.eps, self.cplex
+        omega = self.omega
         # uses the single_destination_attack policy as a starting point
         print '============= initial objective value ============='
         print self.objective(network.new_availabilities())
@@ -63,7 +66,7 @@ class OptimalAttackSolver:
             assert network.verify_adjacency() == True
             print self.objective(network.new_availabilities())
             network.opt_attack_rate(network.attack_routing, k, network.attack_rates, \
-                    alpha, beta, max_iters_attack_rate, eps)
+                    alpha, beta, max_iters_attack_rate, omega, eps)
             print '============= after opt_attack_rate ============='
             assert network.verify_adjacency() == True
             print self.objective(network.new_availabilities())

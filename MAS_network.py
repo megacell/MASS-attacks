@@ -10,6 +10,7 @@ from min_attack_solver import MinAttackSolver
 from attack_routing_solver import AttackRoutingSolver
 from single_destination_attack import SingleDestinationAttack
 from optimal_attack_solver import OptimalAttackSolver
+from max_attack_solver import MaxAttackSolver
 
 __author__ = 'jeromethai'
 
@@ -191,23 +192,25 @@ class Network:
         return np.sum(np.multiply(self.attack_routing, 1.0-self.adjacency)) == 0.0
 
 
-    def opt_attack_routing(self, attack_rates, k, full_adj=True, eps=1e-8, cplex=True):
+    def opt_attack_routing(self, attack_rates, k, full_adj=True, omega=0.0, \
+                                                    eps=1e-8, cplex=True):
         # given fixed attack_rates
         # find the best routing of attacks
         # to minimize the weighted sum of the availabilities
         assert len(attack_rates) == self.size, 'attack_rates wrong size'
         assert (k >= 0 and  k < self.size), 'index k is out of range'
         assert np.sum(attack_rates >= 0.0) == self.size, 'negative attack_rate'
-        a, attack_routing = AttackRoutingSolver(self, attack_rates, k, full_adj, eps, cplex).solve()
+        a, attack_routing = AttackRoutingSolver(self, attack_rates, k, full_adj, 
+                                        omega, eps, cplex).solve()
         # update the network
         self.update(attack_rates, attack_routing)
         return a, attack_routing
 
 
     def opt_attack_rate(self, attack_routing, k, nu_init, \
-                    alpha=5., beta=1., max_iters=10, eps=1e-8):
+                    alpha=5., beta=1., max_iters=10, omega=0.0, eps=1e-8):
         # given fixed attack routing, a_k set to 1 and initial 'nu_init'
-        ars_solver = AttackRateSolver(self, attack_routing, k, nu_init)
+        ars_solver = AttackRateSolver(self, attack_routing, k, nu_init, omega=omega)
         sol = ars_solver.solve(ars_solver.make_sqrt_step(alpha,beta),
                                ars_solver.make_stop(max_iters))
         self.update(sol['attack_rates'], attack_routing)
@@ -255,6 +258,16 @@ class Network:
                         k=None, alpha=10., beta=1., max_iters_attack_rate=5):
         oas = OptimalAttackSolver(self, max_iters, full_adj, eps, cplex, k)
         oas.solve(alpha, beta, max_iters_attack_rate)
+
+
+    def max_attack(self, target, full_adj=True, eps=1e-8):
+        # maximizes the throughput of attacks
+        assert np.max(target) == 1.0, 'max(target) > 1.0'
+        assert np.min(target) >= eps, 'target not positive'
+        opt_rates, opt_routing = MaxAttackSolver(self, target, full_adj=full_adj, eps=eps).solve()
+        # update the network
+        self.update(opt_rates, opt_routing)
+        return opt_rates, opt_routing
 
 
 def load_network(file_path):

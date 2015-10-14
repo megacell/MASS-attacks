@@ -147,13 +147,34 @@ class TestMasNetwork(unittest.TestCase):
         print 'availabilities after attacks', np.sum(network.new_availabilities())
 
 
-    def test_opt_attack_rate(self):
+    # def test_opt_attack_rate(self):
+    #     network = MAS.Network(*generate_asymmetric())
+    #     attack_routing = np.array([[0., 0., 1.],[.5, 0., .5],[.5, .5, 0.]])
+    #     nu_init = np.array([1., 0., 0.])
+    #     k = 2
+    #     network.opt_attack_rate(attack_routing, k, nu_init)
+    #     print network.new_availabilities()
+
+
+    def test_max_attack(self):
         network = MAS.Network(*generate_asymmetric())
-        attack_routing = np.array([[0., 0., 1.],[.5, 0., .5],[.5, .5, 0.]])
-        nu_init = np.array([1., 0., 0.])
-        k = 2
-        network.opt_attack_rate(attack_routing, k, nu_init)
-        print network.new_availabilities()
+        target = np.array([.25, .25, 1.])
+        network.budget = 10.0
+        network.max_attack(target / np.max(target))
+        print np.sum(network.attack_rates)
+        print np.sum(abs(network.new_availabilities() - target))
+        print np.sum(np.multiply(network.attack_rates, target))
+
+
+    # def test_max_attack(self):
+    #     network = MAS.load_network('data/queueing_params.mat')
+    #     network.budget = 200.0
+    #     target = np.random.rand(network.size,)
+    #     network.max_attack(target / np.max(target))
+    #     print np.sum(network.attack_rates)
+    #     print np.sum(abs(network.new_availabilities(), target))
+    #     print np.sum(np.multiply(network.attack_rates, target))
+
 
 
     # def test_opt_attack_rate_full_network(self):

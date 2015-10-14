@@ -102,11 +102,12 @@ def draw_routing(filename, dir):
     fc.dump('routing.geojson')
 
 if __name__ == '__main__':
+    # k = 86
     # cal_logo_experiment(range(1, 15))
     # optimal_attack_full_network()
-    optimal_attack_with_radius(5)
+    # optimal_attack_with_radius(5)
     # network_simulation()
-    # optimal_attack_with_radius(2, save_to='tmp1.pkl')
-    # draw_rates('tmp1.pkl')
-    # draw_routing('tmp1.pkl', 1)
+    #optimal_attack_with_radius(5, save_to='tmp1.pkl')
+    draw_rates('tmp1.pkl')
+    draw_routing('tmp1.pkl', 1)
     #network_simulation()
