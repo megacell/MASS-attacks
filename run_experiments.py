@@ -1,13 +1,18 @@
 import numpy as np
+import pickle
+import scipy.io as sio
 from MAS_network import load_network
 from logo_to_availabilities import get_availabilities
 from optimal_attack_solver import OptimalAttackSolver
+from param_inference.utils import FeatureCollection
+from param_inference.generate_matrices import rbs, get_xy
 from simulation import Network, simulate
 
 __author__ = 'yuanchenyang', 'jeromethai'
 
 from pdb import set_trace as T
 
+MAT_FILE = 'data/queueing_params.mat'
 
 def cal_logo_experiment(adj):
     nw = load_network('data/queueing_params.mat')
@@ -39,7 +44,8 @@ def optimal_attack_full_network():
     nw.balance()
     nw.combine()
     nw.budget = 200.
-    nw.optimal_attack(max_iters=3).solve(alpha=10., beta=1., max_iters_attack_rate=5)
+    nw.optimal_attack(max_iters=2).solve(alpha=10., beta=1., max_iters_attack_rate=5)
+    t()
 
 
 def optimal_attack_with_different_adjacencies():
@@ -62,7 +68,16 @@ def network_simulation():
         n.jump()
     T()
 
+def draw_on_network(filename):
+    fc = FeatureCollection()
+    for weight, station in zip(pickle.load(open(filename)),
+                               sio.loadmat(MAT_FILE)['stations']):
+        fc.add_polygon(rbs.get_poly(*get_xy(station)),
+                       {'weight': weight})
+    fc.dump('tmp1.geojson')
+
 if __name__ == '__main__':
     # cal_logo_experiment(range(1, 15))
     # optimal_attack_full_network()
-    network_simulation()
+    #network_simulation()
+    draw_on_network('tmp.pkl')
