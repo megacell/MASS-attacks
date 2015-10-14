@@ -71,6 +71,18 @@ class TestMinAttackSolver(unittest.TestCase):
         string = to_cplex_lp_file(coeff, sources, network.full_adjacency)
         # print string
 
+    def test_to_cplex_lp_file_adj(self):
+        network = MAS.Network(*generate_asymmetric())
+        network.adjacency_1 = np.array([[0, 1, 1],
+                                        [1, 0, 0],
+                                        [1, 0, 0]])
+        target = np.array([ 0.25, 0.5, 1.])
+        cost = np.ones((3,3))
+        coeff, sources = MinAttackSolver(network, target, cost, full_adj=True).min_cost_flow_init()
+        print to_cplex_lp_file(coeff, sources, network.adjacency_1)
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
