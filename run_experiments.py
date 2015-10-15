@@ -78,13 +78,15 @@ def optimal_attack_with_radius(r, save_to=None):
     nw.optimal_attack(max_iters=3, full_adj=(r == 0), alpha=10., beta=1., \
                       max_iters_attack_rate=5, k=k)
 
-    rates = nw.attack_rates / (nw.attack_rates + nw.rates)
+    save_results(nw, save_to)
 
-    if save_to:
-        obj = {'rates': rates,
-               'routing': nw.attack_routing,
-               'avails': nw.new_availabilities()}
-        pickle.dump(obj, open(save_to, 'wb'))
+
+def save_results(nw, save_to):
+    rates = nw.attack_rates / (nw.attack_rates + nw.rates)
+    obj = {'rates': rates,
+           'routing': nw.attack_routing,
+           'avails': nw.new_availabilities()}
+    pickle.dump(obj, open(save_to, 'wb'))
 
 
 def optimal_attack_with_max_throughput():
@@ -98,15 +100,17 @@ def optimal_attack_with_max_throughput():
                 max_iters_attack_rate=5, k=k)
 
 
-def optimal_attack_with_regularization(omega, ridge):
+def optimal_attack_with_regularization(omega, ridge, save_to):
     nw = load_network(MAT_FILE)
     nw.rates = nw.rates + 50.*np.ones((nw.size,))
-    nw.balance()
-    nw.combine()
+    # nw.balance()
+    # nw.combine()
     nw.budget = 1000.0
     k = 86
     nw.optimal_attack(omega=omega, ridge=ridge, max_iters=3, alpha=10., beta=1., \
                 max_iters_attack_rate=5, k=k)
+    save_results(nw, save_to)
+
 
 
 def network_simulation():
@@ -166,8 +170,22 @@ def draw_routing(outfile, mat, rates, routing):
     fc.dump(outfile)
 
 
-if __name__ == '__main__':
-    # k = 86 for grand central terminal, and k = 302 for a section with small lam
+def draw_network(filename):
+    mat = pickle.load(open(MAT_FILE))
+    saved = pickle.load(open(filename))
+    rates, routing, avails = saved['rates'], saved['routing'], saved['avails']
+    draw_rates('rates.geojson', mat, rates)
+    draw_routing('routing.geojson', mat, rates, routing)
+    draw_availabilities('avails.geojson', mat, avails)
+
+
+def run_jerome():
+    optimal_attack_with_regularization(omega=0.01, ridge=0.01, save_to='tmp1.pkl')
+    draw_network('tmp1.pkl')
+
+
+def run_chenyang():
+        # k = 86 for grand central terminal, and k = 302 for a section with small lam
     # cal_logo_experiment(range(1, 15))
     # optimal_attack_full_network()
     # optimal_attack_with_radius(5)
@@ -185,3 +203,8 @@ if __name__ == '__main__':
     draw_rates('rates.geojson', mat, rates)
     draw_routing('routing.geojson', mat, rates, routing)
     draw_availabilities('avails.geojson', mat, avails)
+
+
+if __name__ == '__main__':
+    run_jerome()
+    # run_chenyang()
