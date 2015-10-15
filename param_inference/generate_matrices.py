@@ -125,7 +125,7 @@ def generate(filename):
         coord = row['station']
         lam[coord] = pickups / float(c.TOTAL_TIME)
 
-    mat['lam'] = np.array([lam[s] for s in to_include])
+    mat['lam'] = np.array([sum(lam[c] for c in clusters[s]) for s in to_include])
 
     # Generate T_ij and p_ij
     T = defaultdict(dict)
@@ -137,10 +137,13 @@ def generate(filename):
         proj_p, proj_d = inv_clusters[pickup], inv_clusters[dropoff]
         if proj_p == proj_d:
             continue
-        T[proj_p][proj_d] = float(row['trip_time_mean']) / c.TRIP_TIME_SCALE \
-                            + T[proj_p].setdefault(proj_d, 0)
+        T[proj_p].setdefault(proj_d, []).append(float(row['trip_time_mean']))
         p[proj_p][proj_d] = int(row['counts']) \
                             + p[proj_p].setdefault(proj_d, 0)
+
+    for pu in T.keys():
+        for do in T[pu].keys():
+            T[pu][do] = np.mean(T[pu][do]) / c.TRIP_TIME_SCALE
 
     # Convert p_ij into distribution and apply smoothing
     alpha = c.SMOOTHING_FACTOR
@@ -211,4 +214,4 @@ def generate(filename):
 
 
 if __name__ == '__main__':
-    generate('queueing_params_no_cluster.pkl')
+    generate('queueing_params.pkl')

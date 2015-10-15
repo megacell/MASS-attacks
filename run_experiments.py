@@ -125,7 +125,8 @@ def draw_rates(outfile, mat, rates):
         clusters = mat['clusters'][station]
         for s in clusters:
             fc.add_polygon(rbs.get_poly(*get_xy(s)),
-                           {'weight': weight/float(len(clusters))})
+                           # Divide by 2 to get rates per hour
+                           {'weight': weight/float(len(clusters) * 2)})
     fc.dump(outfile)
 
 def draw_availabilities(outfile, mat, avails):
@@ -144,39 +145,51 @@ def draw_availabilities(outfile, mat, avails):
 
 def draw_routing(outfile, mat, rates, routing, normalize=False):
     fc = FeatureCollection()
-    stations = map(get_xy, mat['stations'])
-    counter = 0
-    for rate, row, (sx, sy) in zip(rates, routing, stations):
+    stations = mat['stations']
+    clusters = mat['clusters']
+    for rate, row, s in zip(rates, routing, stations):
         total = np.array([0, 0])
-        for prob, (ex, ey) in zip(row, stations):
-            if prob > 0:
-                delta = np.array(rbs.get_center(ex, ey)) - np.array(rbs.get_center(sx, sy))
-                total = total + rate * prob * delta / np.linalg.norm(delta)
-
-        norm = np.linalg.norm(total)
-        if norm > 0:
-            if normalize:
+        for c in clusters[s]:
+            sx, sy = get_xy(c)
+            for prob, e in zip(row, stations):
+                ex, ey = get_xy(e)
+                if prob > 0:
+                    delta = np.array(rbs.get_center(ex, ey)) \
+                          - np.array(rbs.get_center(sx, sy))
+                    total = total + prob * delta
+            norm = np.linalg.norm(total)
+            if norm > 0 and normalize:
                 total = total / np.linalg.norm(total)
-            counter += 1
 
-        fc.add_point(rbs.get_center(sx, sy), {'u': total[0], 'v': total[1]})
+            fc.add_point(rbs.get_center(sx, sy), {'u': total[0], 'v': total[1]})
 
-    #fc.add_point(rbs.get_center(0, 0), {'u': 1, 'v': 1})
+    # Calibration
+    # dy  = np.array(rbs.get_center(0, 1)) - np.array(rbs.get_center(0, 0))
+    # dx  = np.array(rbs.get_center(1, 0)) - np.array(rbs.get_center(0, 0))
+    # dxy = np.array(rbs.get_center(1, 1)) - np.array(rbs.get_center(0, 0))
+    # fc.add_polygon(rbs.get_poly(0, 0))
+    # fc.add_polygon(rbs.get_poly(1, 0))
+    # fc.add_polygon(rbs.get_poly(0, 1))
+    # fc.add_polygon(rbs.get_poly(1, 1))
+    # fc.add_point(rbs.get_center(0, 0), {'u': dx[0], 'v': dx[1]})
+    # fc.add_point(rbs.get_center(0, 0), {'u': dy[0], 'v': dy[1]})
+    # fc.add_point(rbs.get_center(0, 0), {'u': dxy[0], 'v': dxy[1]})
     fc.dump(outfile)
 
 
-def draw_network(filename='tmp1.pkl'):
+def draw_network(filename='tmp1.pkl', normalize=False):
     mat = pickle.load(open(MAT_FILE))
     saved = pickle.load(open(filename))
     rates, routing, avails = saved['rates'], saved['routing'], saved['avails']
     draw_rates('rates.geojson', mat, rates)
-    draw_routing('routing.geojson', mat, rates, routing)
+    draw_routing('routing.geojson', mat, rates, routing, normalize=normalize)
     draw_availabilities('avails.geojson', mat, avails)
 
 
 def optimal_attack_with_regularization(omega, ridge, budget,\
                       save_to='tmp1.pkl', iters=3, r=None):
     nw = load_network(MAT_FILE)
+    T()
     #nw.rates = nw.rates + 50.*np.ones((nw.size,))
     nw.set_weights_to_min_time_usage()
     nw.balance()
@@ -208,7 +221,11 @@ def run_chenyang():
     # optimal_attack_with_radius(5)
     # network_simulation()
 
-    cal_logo_draw(11)
+    optimal_attack_with_regularization(max_iters=5, omega=1000., ridge=0.01,
+                                       save_to='tmp1.pkl', r=None)
+    draw_network('tmp1.pkl', normalize=True)
+
+    #cal_logo_draw(7)
     #cal_logo_experiment(range(1, 15))
 
     #optimal_attack_with_max_throughput()
