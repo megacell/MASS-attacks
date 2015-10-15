@@ -19,6 +19,8 @@ class MaxAttackSolver:
         self.delta = network.routing # routing prob. before attacks
         self.eps = eps
         self.N = network.size
+        if isinstance(ridge, int) or isinstance(ridge, float): 
+            ridge = ridge * np.ones((network.size,))
         self.ridge = ridge
         self.full_adj = full_adj
         self.adj = network.full_adjacency if full_adj else network.adjacency
@@ -33,6 +35,7 @@ class MaxAttackSolver:
         assert self.a.shape[0] == self.N, 'availabilities do not match network size'
         assert np.max(self.a) == 1.0, 'availabilities not <= 1.0'
         assert np.min(self.a) >= self.eps, 'availabilities not positive'
+        assert np.min(self.ridge) >= 0.0
 
 
     def solver_init(self):
@@ -99,23 +102,56 @@ class MaxAttackSolver:
                        for i in range(N)
                        for j in range(N)
                        if self.adj[i,j]==1.])
-
         # equality constraints
         cst1 = '\n  '.join(['+'.join(['x_{}_{} - x_{}_{}'.format(j, i, i, j)
                                      for j in range(i) + range(i+1, N)
                                      if self.adj[i,j]==1.])
                             + '= {}'.format(self.sources[i])
                            for i in range(N)])
-        cst2 = '+'.join(['{} x_{}_{}'.format(self.inverse_a[i], i, j)
-                       for i in range(N)
-                       for j in range(N)
-                       if self.adj[i,j]==1.])
-        cst = cst1 + '\n  ' + cst2 + ' <= {}'.format(self.b)
+        # budget constraint
+        if np.min(self.ridge) == 0.0:
+            # if no ridge, budget constraint expressed in terms of x_ij
+            cst2 = '+'.join(['{} x_{}_{}'.format(self.inverse_a[i], i, j)
+                           for i in range(N)
+                           for j in range(N)
+                           if self.adj[i,j]==1.])
+            cst = cst1 + '\n  ' + cst2 + ' <= {}'.format(self.b)
+        else:
+            # if ridge > 0, budget constraints expressed in terms of n_i
+            # bu the function self.add_ridge(obj, cst, bnd)
+            cst = cst1
         # bounds
         bnd = '\n  '.join(['0 <= x_{}_{}'.format(i,j)
                            for i in range(N)
                            for j in range(N)
                            if self.adj[i,j]==1.])
-
+        # add ridge regression if ridge parameter is positive
+        if np.min(self.ridge) > 0.0:
+            obj, cst, bnd = self.add_ridge(obj, cst, bnd)
         return cplex_interface.template.format(obj, cst, bnd)
 
+
+    def add_ridge(self, obj1, cst1, bnd1):
+        # add ridge regression
+        # Objective
+        N = self.N
+        ridge = self.ridge
+        obj2 = ' + '.join(['{} n_{} ^2'.format(ridge[i], i) for i in range(N)])
+        obj = '{} + [ {} ] / 2'.format(obj1, obj2)
+
+        # equality constraints
+        cst2 = []
+        for i in range(N):
+            eqn = ' + '.join(['x_{}_{}'.format(i,j)
+                                for j in range(i) + range(i+1, N)
+                                if self.adj[i,j] == 1.])
+            end = '- {} n_{} = 0.0'.format(self.a[i])
+            cst2.append(eqn + end)
+        # budget constraint
+        bdg = ' + '.join(['n_{}' for i in range(N)]) + ' <= {}'.format(self.b)
+        cst =  cst1 + '\n  ' + '\n  '.join(cst2) + '\n  ' + bdg
+
+        # bounds
+        bnd2 = '\n '.join(['0 <= n_{}'.format(i) for i in range(N)])
+        bnd = bn1 + '\n  ' + bnd2
+        return obj, cst, bnd
