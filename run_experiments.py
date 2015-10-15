@@ -74,7 +74,7 @@ def optimal_attack_with_max_throughput():
     nw.rates = nw.rates + 50.*np.ones((nw.size,))
     nw.balance()
     nw.combine()
-    nw.budget = 1000
+    nw.budget = 1000.0
     k = 86
     nw.optimal_attack(omega=0.0, max_iters=3, alpha=10., beta=1., \
                 max_iters_attack_rate=5, k=k)

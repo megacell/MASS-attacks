@@ -12,7 +12,8 @@ __author__ = 'jeromethai'
 
 
 class AttackRateSolver:
-    def __init__(self, network, attack_routing, k, nu_init, omega=0.0, eps=1e-8):
+    def __init__(self, network, attack_routing, k, nu_init, omega=0.0, \
+                    ridge=0.0, eps=1e-8):
         # Class for the Attack Rate Solver
         self.network = network
         self.kappa = attack_routing # the attack routing is fixed
@@ -22,6 +23,7 @@ class AttackRateSolver:
         self.nu = nu_init # nu_init is the initial rate of 
         self.nu_less_k = np.delete(nu_init, k)
         self.omega = omega
+        self.ridge = ridge
         self.eps = eps
         self.N = network.size
         self.w = network.weights # weights for the availabilities in the obj

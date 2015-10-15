@@ -11,13 +11,15 @@ __author__ = 'jeromethai'
 
 class MaxAttackSolver:
     # class for computing the min attacks with the availabilities fixed
-    def __init__(self, network, target_availabilities, full_adj=True, eps=1e-8):
+    def __init__(self, network, target_availabilities, ridge=0.0, full_adj=True, \
+                        eps=1e-8):
         self.network = network
         self.a = target_availabilities # availabilities are fixed
         self.phi = network.rates # rates before the attacks
         self.delta = network.routing # routing prob. before attacks
         self.eps = eps
         self.N = network.size
+        self.ridge = ridge
         self.full_adj = full_adj
         self.adj = network.full_adjacency if full_adj else network.adjacency
         self.b = network.budget

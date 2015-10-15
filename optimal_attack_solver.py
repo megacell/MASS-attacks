@@ -14,13 +14,14 @@ __author__ = 'jeromethai'
 
 class OptimalAttackSolver:
     # class for the optimal attack solver
-    def __init__(self, network, max_iters=10, full_adj=True, omega=0.0, eps=1e-8, cplex=True, \
-                    k=None):
+    def __init__(self, network, max_iters=10, full_adj=True, omega=0.0, ridge=0.0, \
+                    eps=1e-8, cplex=True, k=None):
         self.network = network
         self.k = k
         self.omega = omega
         self.N = network.size
-        self.omega = omega
+        self.omega = omega # term to maximize throughput
+        self.ridge = ridge # l2-regularization on the attack_rates
         self.eps = eps
         self.cplex = cplex
         self.w = network.weights
@@ -40,6 +41,7 @@ class OptimalAttackSolver:
         network = self.network
         full_adj, eps, cplex =  self.full_adj, self.eps, self.cplex
         omega = self.omega
+        ridge = self.ridge
         # uses the single_destination_attack policy as a starting point
         print '============= initial objective value ============='
         print self.objective(network.new_availabilities(), network.attack_rates)
@@ -64,7 +66,7 @@ class OptimalAttackSolver:
             print '============= after opt_attack_routing ============='
             if not full_adj: assert network.verify_adjacency() == True
             print self.objective(network.new_availabilities(), network.attack_rates)
-            network.max_attack(network.new_availabilities(), full_adj, eps)
+            network.max_attack(network.new_availabilities(), ridge, full_adj, eps)
             network.re_normalize_attack_routing()
             print '============= after min_attack ============='
             #import pdb; pdb.set_trace()

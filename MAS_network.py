@@ -207,10 +207,11 @@ class Network:
         return a, attack_routing
 
 
-    def opt_attack_rate(self, attack_routing, k, nu_init, \
-                    alpha=5., beta=1., max_iters=10, omega=0.0, eps=1e-8):
+    def opt_attack_rate(self, attack_routing, k, nu_init, alpha=5., beta=1., \
+                           max_iters=10, omega=0.0, ridge=0.0, eps=1e-8):
         # given fixed attack routing, a_k set to 1 and initial 'nu_init'
-        ars_solver = AttackRateSolver(self, attack_routing, k, nu_init, omega=omega)
+        ars_solver = AttackRateSolver(self, attack_routing, k, nu_init, \
+                                          omega=omega, ridge=ridge)
         sol = ars_solver.solve(ars_solver.make_sqrt_step(alpha,beta),
                                ars_solver.make_stop(max_iters))
         self.update(sol['attack_rates'], attack_routing)
@@ -254,18 +255,20 @@ class Network:
         return best
 
 
-    def optimal_attack(self, max_iters=10, full_adj=True, omega=0.0, \
-                        eps=1e-8, cplex=True, \
-                        k=None, alpha=10., beta=1., max_iters_attack_rate=5):
-        oas = OptimalAttackSolver(self, max_iters, full_adj, omega, eps, cplex, k)
+    def optimal_attack(self, max_iters=10, full_adj=True, omega=0.0, ridge=0.0, \
+                        eps=1e-8, cplex=True, k=None, alpha=10., beta=1., \
+                        max_iters_attack_rate=5):
+        oas = OptimalAttackSolver(self, max_iters, full_adj, omega, ridge, eps, \
+                                        cplex, k)
         oas.solve(alpha, beta, max_iters_attack_rate)
 
 
-    def max_attack(self, target, full_adj=True, eps=1e-8):
+    def max_attack(self, target, ridge=0.0, full_adj=True, eps=1e-8):
         # maximizes the throughput of attacks
         assert np.max(target) == 1.0, 'max(target) > 1.0'
         assert np.min(target) >= eps, 'target not positive'
-        opt_rates, opt_routing = MaxAttackSolver(self, target, full_adj=full_adj, eps=eps).solve()
+        opt_rates, opt_routing = MaxAttackSolver(self, target, ridge=ridge, \
+                            full_adj=full_adj, eps=eps).solve()
         # update the network
         self.update(opt_rates, opt_routing)
         return opt_rates, opt_routing
