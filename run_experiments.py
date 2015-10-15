@@ -169,21 +169,25 @@ def draw_network(filename):
     draw_availabilities('avails.geojson', mat, avails)
 
 
-def optimal_attack_with_regularization(omega, ridge, save_to):
+def optimal_attack_with_regularization(max_iters, omega, ridge, save_to, r=None):
     nw = load_network(MAT_FILE)
     #nw.rates = nw.rates + 50.*np.ones((nw.size,))
+    nw.set_weights_to_min_time_usage()
     nw.balance()
     nw.combine()
     nw.budget = 1000.0
-    k =86
-    nw.optimal_attack(omega=omega, ridge=ridge, max_iters=3, alpha=1., beta=1., \
-                max_iters_attack_rate=5, k=k)
+    k=86
+    if r is not None: nw.update_adjacency(r)
+    nw.optimal_attack(omega=omega, ridge=ridge, max_iters=max_iters, \
+                        alpha=10., beta=1., max_iters_attack_rate=5, \
+                        k=k, full_adj=(r is None))
     save_results(nw, save_to)
 
 
-
 def run_jerome():
-    optimal_attack_with_regularization(omega=0.01, ridge=0.01, save_to='tmp1.pkl')
+    optimal_attack_with_regularization(max_iters=5, omega=1000., ridge=0.01, \
+        save_to='tmp1.pkl')
+    #optimal_attack_with_regularization(omega=0.01, ridge=0.01, save_to='tmp1.pkl', r=3)
     draw_network('tmp1.pkl')
 
 

@@ -28,15 +28,47 @@ class OptimalAttackSolver:
         self.cplex = cplex
         self.w = network.weights
         self.full_adj = full_adj
-        # objects specific to the block-coordinate descent
         self.max_iters = max_iters
+        self.b = network.budget
+        self.initial = None
+        self.last = None
+        self.messages = []
 
-
-    def objective(self, a, nu):
+    def status(self, iter, last_step):
+        # check that eveything is all right
+        if iter>0: self.network.re_normalize_attack_routing()
+        if not self.full_adj: assert self.network.verify_adjacency() == True
+        # print status
+        nu = self.network.attack_rates
+        a = self.network.new_availabilities()
         obj = np.sum(np.multiply(self.w, a))
-        thru = 0.0 if nu is None else np.sum(np.multiply(nu, a))
-        reg = 0.0 if nu is None else 0.5 * np.sum(np.multiply(self.ridge, np.square(nu)))
-        return (obj, thru, reg)
+        if nu is None: nu = 0.0 
+        thru = np.sum(np.multiply(nu, a))
+        reg = 0.5 * np.sum(np.multiply(self.ridge, np.square(nu)))
+        template = \
+        '''
+        ==================================================================
+        iteration      : {}
+        last step      : {}
+        objective      : {} / {}
+        relative obj   : {} %
+        progress       : {} %
+        throughput     : {}
+        regularization : {}
+        budget/total   : {} / {}
+        ==================================================================
+        '''
+        msg = template.format(iter, \
+                        last_step, \
+                        int(obj), int(self.initial), \
+                        int(100.0 * obj / self.initial), \
+                        100.0 * (self.last - obj) / obj, \
+                        int(thru), \
+                        reg, \
+                        int(np.sum(nu)), int(self.b))
+        print msg
+        self.last = obj
+        self.messages.append(msg)
 
 
     def solve(self, alpha=10., beta=1., max_iters_attack_rate=5, split_budget=False):
@@ -46,46 +78,32 @@ class OptimalAttackSolver:
         omega = self.omega
         ridge = self.ridge
         # uses the single_destination_attack policy as a starting point
-        print '============= initial objective value ============='
-        print self.objective(network.new_availabilities(), network.attack_rates)
+        self.initial = np.sum(np.multiply(self.w, network.new_availabilities()))
+        self.last = self.initial
+        self.status(0, 'before initialization')
         k = network.best_single_destination_attack() if self.k is None else self.k
-        print 'station {} is fixed to be equal to 1'.format(k)
-
         # if full_adj:
         #     network.single_destination_attack(k)
         # else:
         #     network.split_budget_attack()
         network.split_budget_attack()
-        print '============= after initialization ============='
-        # import pdb; pdb.set_trace()
-        if not full_adj: assert network.verify_adjacency() == True
-        print self.objective(network.new_availabilities(), network.attack_rates)
-        for i in range(self.max_iters):
-            print ' ============= iter ============='
-            print i
+        self.status(0, 'after initialization')
+        for i in range(1, self.max_iters+1):
+            # apply optimal attack routing
             network.opt_attack_routing(network.attack_rates, k, full_adj, omega, \
                                                                         eps, cplex)
-            network.re_normalize_attack_routing()
-            print '============= after opt_attack_routing ============='
-            if not full_adj: assert network.verify_adjacency() == True
-            print self.objective(network.new_availabilities(), network.attack_rates)
-            network.max_attack(network.new_availabilities(), ridge, full_adj, eps)
-            network.re_normalize_attack_routing()
-            print '============= after min_attack ============='
-            #import pdb; pdb.set_trace()
-            if not full_adj: assert network.verify_adjacency() == True
-            print self.objective(network.new_availabilities(), network.attack_rates)
-            network.opt_attack_rate(network.attack_routing, k, network.attack_rates, \
-                    alpha, beta+i*max_iters_attack_rate, max_iters_attack_rate, \
-                    omega, ridge, eps)
-            print '============= after opt_attack_rate ============='
-            if not full_adj: assert network.verify_adjacency() == True
-            print self.objective(network.new_availabilities(), network.attack_rates)
-            print '============= max budget ============= '
-            print network.budget
-            print '============= final budget ============= '
-            print np.sum(network.attack_rates)
 
+            self.status(i, 'optimal_attack_routing')
+            # apply maximum throughput attack
+            network.max_attack(network.new_availabilities(), ridge, full_adj, eps)
+            self.status(i, 'maximum_throughput_attack')
+            # apply optimal attack rate
+            network.opt_attack_rate(network.attack_routing, k, network.attack_rates, \
+                    alpha, beta, max_iters_attack_rate, \
+                    omega, ridge, eps)
+            self.status(i, 'optimal_attack_rate')
+        print '\n'.join(self.messages)
         print sorted(network.attack_rates)
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         #print network.attack_routing
+        print 'generating visualization ...'

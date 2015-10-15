@@ -83,7 +83,6 @@ class MaxAttackSolver:
     def cplex_solver(self):
         open('tmp.lp', 'w').write(self.to_cplex_lp_file())
         "solver to be feeded to CPLEX for max_attack"
-        # print self.to_cplex_lp_file()
         variables, sols = cplex_interface.solve_from_file('tmp.lp', 'o')
         non_zeros = np.where(sols)
         flow = np.zeros((self.N,self.N))
@@ -150,7 +149,7 @@ class MaxAttackSolver:
             end = '- {} n_{} = 0.0'.format(self.a[i], i)
             cst2.append(eqn + end)
         # budget constraint
-        bdg = ' + '.join(['n_{}' for i in range(N)]) + ' <= {}'.format(self.b)
+        bdg = ' + '.join(['n_{}'.format(i) for i in range(N)]) + ' <= {}'.format(self.b)
         cst =  cst1 + '\n  ' + '\n  '.join(cst2) + '\n  ' + bdg
 
         # bounds

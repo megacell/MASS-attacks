@@ -121,15 +121,15 @@ class AttackRateSolver:
 
 
     def line_search(self, t, g):
+        epsilon = 1e-3
         # do line search
         nu = ball1_projection(self.nu - t * g, self.b)
         obj, a = self.objective(nu)
-        obj_values = self.obj_values
-        #import pdb; pdb.set_trace()
-        while obj >= self.obj_values[-1] and t > 1e-6:
+        while obj >= self.obj_values[-1] and t > epsilon:
             t = t / 2.
             nu = ball1_projection(self.nu - t * g, self.b)
             obj, a = self.objective(nu)
+        if t <= epsilon: t = 0.0
         return t
 
 
@@ -143,7 +143,7 @@ class AttackRateSolver:
             nu = ball1_projection(self.nu - t * g, self.b)
             # nu = simplex_projection(self.nu - step() * g, self.b)
             obj, a = self.objective(nu)
-            if stop() or t <= 1e-3: break
+            if stop() or t == 0.0: break
             self.update(nu, obj, a)
             print 'iter: ', i
             print 'obj: ', obj
