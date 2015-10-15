@@ -12,6 +12,8 @@ __author__ = 'yuanchenyang', 'jeromethai'
 from pdb import set_trace as T
 
 MAT_FILE = 'data/queueing_params.pkl'
+#MAT_FILE = 'data/queueing_params_no_cluster.pkl'
+
 
 def cal_logo_experiment(adj):
     nw = load_network(MAT_FILE)
@@ -100,18 +102,6 @@ def optimal_attack_with_max_throughput():
                 max_iters_attack_rate=5, k=k)
 
 
-def optimal_attack_with_regularization(omega, ridge, save_to):
-    nw = load_network(MAT_FILE)
-    nw.rates = nw.rates + 50.*np.ones((nw.size,))
-    # nw.balance()
-    # nw.combine()
-    nw.budget = 1000.0
-    k = 86
-    nw.optimal_attack(omega=omega, ridge=ridge, max_iters=3, alpha=10., beta=1., \
-                max_iters_attack_rate=5, k=k)
-    save_results(nw, save_to)
-
-
 
 def network_simulation():
     nw = load_network(MAT_FILE)
@@ -177,6 +167,19 @@ def draw_network(filename):
     draw_rates('rates.geojson', mat, rates)
     draw_routing('routing.geojson', mat, rates, routing)
     draw_availabilities('avails.geojson', mat, avails)
+
+
+def optimal_attack_with_regularization(omega, ridge, save_to):
+    nw = load_network(MAT_FILE)
+    #nw.rates = nw.rates + 50.*np.ones((nw.size,))
+    nw.balance()
+    nw.combine()
+    nw.budget = 1000.0
+    k =86
+    nw.optimal_attack(omega=omega, ridge=ridge, max_iters=3, alpha=1., beta=1., \
+                max_iters_attack_rate=5, k=k)
+    save_results(nw, save_to)
+
 
 
 def run_jerome():

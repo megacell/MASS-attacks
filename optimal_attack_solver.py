@@ -76,7 +76,8 @@ class OptimalAttackSolver:
             if not full_adj: assert network.verify_adjacency() == True
             print self.objective(network.new_availabilities(), network.attack_rates)
             network.opt_attack_rate(network.attack_routing, k, network.attack_rates, \
-                    alpha, beta, max_iters_attack_rate, omega, ridge, eps)
+                    alpha, beta+i*max_iters_attack_rate, max_iters_attack_rate, \
+                    omega, ridge, eps)
             print '============= after opt_attack_rate ============='
             if not full_adj: assert network.verify_adjacency() == True
             print self.objective(network.new_availabilities(), network.attack_rates)
@@ -85,5 +86,6 @@ class OptimalAttackSolver:
             print '============= final budget ============= '
             print np.sum(network.attack_rates)
 
+        print sorted(network.attack_rates)
         import pdb; pdb.set_trace()
         #print network.attack_routing
