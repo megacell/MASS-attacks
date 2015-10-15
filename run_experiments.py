@@ -67,7 +67,6 @@ def optimal_attack_with_radius(r, save_to=None):
     # try to compute the optimal attacks with different radii of adjacencies
     nw = load_network(MAT_FILE)
     nw.set_weights_to_min_time_usage()
-    T()
     #nw.rates += np.ones(nw.size) * 100
     nw.balance()
     nw.combine()
@@ -129,8 +128,10 @@ def draw_rates(outfile, mat, rates):
     stations = mat['stations']
     clusters = mat['clusters']
     for weight, station in zip(rates, stations):
-        for s in mat['clusters'][station]:
-            fc.add_polygon(rbs.get_poly(*get_xy(s)), {'weight': weight})
+        clusters = mat['clusters'][station]
+        for s in clusters:
+            fc.add_polygon(rbs.get_poly(*get_xy(s)),
+                           {'weight': weight/float(len(clusters))})
     fc.dump(outfile)
 
 def draw_availabilities(outfile, mat, avails):
@@ -138,8 +139,10 @@ def draw_availabilities(outfile, mat, avails):
     stations = mat['stations']
     clusters = mat['clusters']
     for weight, station in zip(avails, stations):
-        for s in mat['clusters'][station]:
-            fc.add_polygon(rbs.get_poly(*get_xy(s)), {'weight': weight})
+        clusters = mat['clusters'][station]
+        for s in clusters:
+            fc.add_polygon(rbs.get_poly(*get_xy(s)),
+                           {'weight': weight/float(len(clusters))})
     # So that scale is from 0 to 1
     fc.add_polygon(rbs.get_poly(100, 100), dict(weight=0))
     fc.dump(outfile)
@@ -173,7 +176,7 @@ if __name__ == '__main__':
     #cal_logo_draw(1)
 
     #optimal_attack_with_max_throughput()
-    optimal_attack_with_radius(10, save_to='tmp1.pkl')
+    #optimal_attack_with_radius(10, save_to='tmp1.pkl')
     #optimal_attack_with_regularization(omega=0.1, ridge=0.01)
 
     mat = pickle.load(open(MAT_FILE))
