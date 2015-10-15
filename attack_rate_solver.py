@@ -86,7 +86,9 @@ class AttackRateSolver:
         a = pi_2_a(pi, lam)
         # compute the objective
         obj = np.sum(np.multiply(self.w, a))
-        return obj, a
+        thru = self.omega * np.sum(np.multiply(nu, a))
+        reg = 0.5 * np.sum(np.multiply(self.ridge, np.square(nu)))
+        return obj+thru+reg, a
 
 
     def gradient(self):
