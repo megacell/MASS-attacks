@@ -37,7 +37,8 @@ class OptimalAttackSolver:
     def status(self, iter, last_step):
         # check that eveything is all right
         if iter>0: self.network.re_normalize_attack_routing()
-        if not self.full_adj: assert self.network.verify_adjacency() == True
+        if not self.full_adj and self.network.attack_routing is not None: 
+            assert self.network.verify_adjacency() == True
         # print status
         nu = self.network.attack_rates
         a = self.network.new_availabilities()

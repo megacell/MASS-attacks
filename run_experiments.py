@@ -185,9 +185,11 @@ def optimal_attack_with_regularization(max_iters, omega, ridge, save_to, r=None)
 
 
 def run_jerome():
-    optimal_attack_with_regularization(max_iters=5, omega=1000., ridge=0.01, \
-        save_to='tmp1.pkl')
-    #optimal_attack_with_regularization(omega=0.01, ridge=0.01, save_to='tmp1.pkl', r=3)
+    # ridge = [0.01, 0.1]
+    #optimal_attack_with_regularization(max_iters=5, omega=1000., ridge=0.1, \
+    #    save_to='tmp1.pkl')
+    optimal_attack_with_regularization(max_iters=5, omega=1000., ridge=0.1, \
+        save_to='tmp1.pkl', r=3)
     draw_network('tmp1.pkl')
 
 
