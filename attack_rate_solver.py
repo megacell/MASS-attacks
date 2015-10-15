@@ -68,7 +68,6 @@ class AttackRateSolver:
         # update with the current nu, obj, and availabilities 'a'
         self.nu = nu
         self.nu_less_k = np.delete(nu, self.k)
-        if self.omega>0.0: obj = obj[0]
         self.obj_values.append(obj)
         self.a = a
         self.iter = self.iter + 1
@@ -87,7 +86,6 @@ class AttackRateSolver:
         a = pi_2_a(pi, lam)
         # compute the objective
         obj = np.sum(np.multiply(self.w, a))
-        obj = obj if self.omega==0.0 else (obj, np.sum(np.multiply(self.nu, a)))
         return obj, a
 
 
@@ -122,16 +120,31 @@ class AttackRateSolver:
         return lambda: alpha / np.sqrt(self.iter + beta)
 
 
+    def line_search(self, t, g):
+        epsilon = 1e-3
+        # do line search
+        nu = ball1_projection(self.nu - t * g, self.b)
+        obj, a = self.objective(nu)
+        while obj >= self.obj_values[-1] and t > epsilon:
+            t = t / 2.
+            nu = ball1_projection(self.nu - t * g, self.b)
+            obj, a = self.objective(nu)
+        if t <= epsilon: t = 0.0
+        return t
+
+
+
     def solve(self, step, stop):
         # solves using gradient descent
         self.init_solver()
         for i in range(self.max_iters):
             g = self.gradient()
-            nu = ball1_projection(self.nu - step() * g, self.b)
+            t = self.line_search(step(), g)
+            nu = ball1_projection(self.nu - t * g, self.b)
             # nu = simplex_projection(self.nu - step() * g, self.b)
             obj, a = self.objective(nu)
+            if stop() or t == 0.0: break
             self.update(nu, obj, a)
-            if stop(): break
             print 'iter: ', i
             print 'obj: ', obj
         return {'attack_rates': self.nu, 'obj_values': self.obj_values}
