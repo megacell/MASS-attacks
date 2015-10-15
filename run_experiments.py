@@ -82,8 +82,8 @@ def optimal_attack_with_max_throughput():
 def optimal_attack_with_regularization(omega, ridge):
     nw = load_network(MAT_FILE)
     nw.rates = nw.rates + 50.*np.ones((nw.size,))
-    nw.balance()
-    nw.combine()
+    # nw.balance()
+    # nw.combine()
     nw.budget = 1000.0
     k = 86
     nw.optimal_attack(omega=omega, ridge=ridge, max_iters=3, alpha=10., beta=1., \
@@ -142,4 +142,4 @@ if __name__ == '__main__':
     #draw_routing('tmp1.pkl', 1)
     #network_simulation()
     #optimal_attack_with_max_throughput()
-    optimal_attack_with_regularization(omega=0.1, ridge=0.01)
+    optimal_attack_with_regularization(omega=0.01, ridge=0.01)
