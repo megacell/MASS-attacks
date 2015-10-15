@@ -202,9 +202,12 @@ def optimal_attack_with_regularization(max_iters, omega, ridge, save_to, r=None)
 
 
 def run_jerome():
-    optimal_attack_with_regularization(max_iters=5, omega=1000., ridge=0.01,
-                                       save_to='tmp1.pkl', r=None)
-    draw_network('tmp1.pkl', normalize=True)
+    # ridge = [0.01, 0.1]
+    #optimal_attack_with_regularization(max_iters=5, omega=1000., ridge=0.1, \
+    #    save_to='tmp1.pkl')
+    optimal_attack_with_regularization(max_iters=5, omega=1000., ridge=0.1, \
+        save_to='tmp1.pkl', r=3)
+    draw_network('tmp1.pkl')
 
 
 def run_chenyang():
@@ -214,7 +217,11 @@ def run_chenyang():
     # optimal_attack_with_radius(5)
     # network_simulation()
 
-    cal_logo_draw(7)
+    optimal_attack_with_regularization(max_iters=5, omega=1000., ridge=0.01,
+                                       save_to='tmp1.pkl', r=None)
+    draw_network('tmp1.pkl', normalize=True)
+
+    #cal_logo_draw(7)
     #cal_logo_experiment(range(1, 15))
 
     #optimal_attack_with_max_throughput()
