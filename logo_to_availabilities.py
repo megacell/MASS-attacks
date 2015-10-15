@@ -1,4 +1,5 @@
 import numpy as np
+import pickle
 import scipy.io as sio
 
 from PIL import Image
@@ -7,7 +8,6 @@ from pdb import set_trace as T
 import param_inference.cfg as c
 from param_inference.utils import FeatureCollection
 from param_inference.generate_matrices import rbs, get_xy
-
 
 LOGO_FILE = 'data/cal-logo-bw.jpg'
 X, Y = (20, 20) # Size of image
@@ -38,7 +38,7 @@ def test_image_matrix(station_names):
 
     # So that scale is from 0 to 1
     fc.add_polygon(rbs.get_poly(100, 100), dict(weight=0))
-    fc.dump('tmp1.geojson')
+    fc.dump('cal_logo.geojson')
 
 def get_availabilities(station_names):
     data = get_image_matrix()
@@ -48,4 +48,4 @@ def get_availabilities(station_names):
     return np.array(map(get_avail, station_names))
 
 if __name__ == '__main__':
-    test_image_matrix(pickle.load(open('data/queueing_params.pkl'))['stations'])
+    test_image_matrix(pickle.load(open('data/queueing_params_no_cluster.pkl'))['stations'])

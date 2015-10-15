@@ -24,13 +24,30 @@ def cal_logo_experiment(adj):
     for i in adj:
         nw.update_adjacency(i)
         att_rates, att_routing = nw.min_attack(target, full_adj=False)
-        T()
         res.append(int(np.sum(att_rates)))
     print 'Passenger Arrival Rate:', np.sum(nw.rates)
     print 'Balance Cost: ', np.sum(bal_rates)
     print 'Attack After Balance Cost (adjacency {}): {}'.format(adj, res)
     return res
 
+def cal_logo_draw(adj):
+    mat = pickle.load(open(MAT_FILE))
+    nw = load_network(MAT_FILE)
+    target = get_availabilities(nw.station_names)
+
+    bal_rates, bal_routing = nw.balance()
+    nw.combine()
+
+    nw.update_adjacency(adj)
+    att_rates, att_routing = nw.min_attack(target, full_adj=False)
+
+    print 'Passenger Arrival Rate:', np.sum(nw.rates)
+    print 'Balance Cost: ', np.sum(bal_rates)
+    print 'Attack After Balance Cost (adjacency {}): {}'.format(adj, np.sum(att_rates))
+
+    draw_rates('logo_rates.geojson', mat, att_rates)
+    draw_routing('logo_routing.geojson', mat, att_rates, att_routing)
+    draw_availabilities('logo_avail.geojson', mat, nw.new_availabilities())
 
 def optimal_attack_full_network():
     # when there is no limit on the type of attacks,
@@ -50,6 +67,7 @@ def optimal_attack_with_radius(r, save_to=None):
     # try to compute the optimal attacks with different radii of adjacencies
     nw = load_network(MAT_FILE)
     nw.set_weights_to_min_time_usage()
+    T()
     #nw.rates += np.ones(nw.size) * 100
     nw.balance()
     nw.combine()
@@ -58,13 +76,15 @@ def optimal_attack_with_radius(r, save_to=None):
         nw.update_adjacency(r)
     # k has been pre-processed and is given by best_single_destination_attack()
     k = 86 #442 #386 #129
-    nw.optimal_attack(max_iters=1, full_adj=(r == 0), alpha=10., beta=1., \
-                            max_iters_attack_rate=3, k=k)
+    nw.optimal_attack(max_iters=3, full_adj=(r == 0), alpha=10., beta=1., \
+                      max_iters_attack_rate=5, k=k)
 
     rates = nw.attack_rates / (nw.attack_rates + nw.rates)
 
     if save_to:
-        obj = {'rates': rates, 'routing': nw.attack_routing}
+        obj = {'rates': rates,
+               'routing': nw.attack_routing,
+               'avails': nw.new_availabilities()}
         pickle.dump(obj, open(save_to, 'wb'))
 
 
@@ -92,31 +112,43 @@ def network_simulation():
         n.jump()
 
 
-def draw_rates(filename):
+def draw_rates(outfile, mat, rates):
     fc = FeatureCollection()
-    rates = pickle.load(open(filename))['rates']
-    mat = pickle.load(open(MAT_FILE))
     stations = mat['stations']
     clusters = mat['clusters']
     for weight, station in zip(rates, stations):
         for s in mat['clusters'][station]:
             fc.add_polygon(rbs.get_poly(*get_xy(s)), {'weight': weight})
-    fc.dump('rates.geojson')
+    fc.dump(outfile)
 
-
-def draw_routing(filename, dir):
+def draw_availabilities(outfile, mat, avails):
     fc = FeatureCollection()
-    routing = pickle.load(open(filename))['routing']
-    stations = map(get_xy, pickle.load(open(MAT_FILE))['stations'])
+    stations = mat['stations']
+    clusters = mat['clusters']
+    for weight, station in zip(avails, stations):
+        for s in mat['clusters'][station]:
+            fc.add_polygon(rbs.get_poly(*get_xy(s)), {'weight': weight})
+    # So that scale is from 0 to 1
+    fc.add_polygon(rbs.get_poly(100, 100), dict(weight=0))
+    fc.dump(outfile)
 
-    for row, (sx, sy) in zip(routing, stations):
-        total = 0
-        for rate, (ex, ey) in zip(row, stations):
-            dx, dy = ex - sx, ey - sy
-            if dx > 0:
-                total += rate * dx / np.sqrt(dx**2 + dy**2)
-        fc.add_polygon(rbs.get_poly(sx, sy), {'weight': total})
-    fc.dump('routing.geojson')
+
+def draw_routing(outfile, mat, rates, routing):
+    fc = FeatureCollection()
+    stations = map(get_xy, mat['stations'])
+    counter = 0
+    for rate, row, (sx, sy) in zip(rates, routing, stations):
+        total = np.array([0, 0])
+        for prob, (ex, ey) in zip(row, stations):
+            if prob > 0:
+                delta = np.array(rbs.get_center(ex, ey)) - np.array(rbs.get_center(sx, sy))
+                total = total + rate * prob * delta / np.linalg.norm(delta)
+        if (total[0] + total[1]) > 0:
+            counter += 1
+        fc.add_point(rbs.get_center(sx, sy), {'u': total[0], 'v': total[1]})
+
+    #fc.add_point(rbs.get_center(0, 0), {'u': 1, 'v': 1})
+    fc.dump(outfile)
 
 
 if __name__ == '__main__':
@@ -125,8 +157,18 @@ if __name__ == '__main__':
     # optimal_attack_full_network()
     # optimal_attack_with_radius(5)
     # network_simulation()
+
+
+    #cal_logo_draw(1)
+
     optimal_attack_with_radius(10, save_to='tmp1.pkl')
-    draw_rates('tmp1.pkl')
-    draw_routing('tmp1.pkl', 1)
+    mat = pickle.load(open(MAT_FILE))
+    saved = pickle.load(open('tmp1.pkl'))
+    rates, routing, avails = saved['rates'], saved['routing'], saved['avails']
+    draw_rates('rates.geojson', mat, rates)
+    draw_routing('routing.geojson', mat, rates, routing)
+    draw_availabilities('avails.geojson', mat, avails)
+
+
     #network_simulation()
     #optimal_attack_with_max_throughput()
