@@ -2,7 +2,7 @@
 '''
 
 import numpy as np
-import scipy.io
+import pickle
 from utils import is_equal, pi_2_a, r_2_pi, norm_adjacencies
 # attack solvers
 from attack_rate_solver import AttackRateSolver
@@ -200,7 +200,7 @@ class Network:
         assert len(attack_rates) == self.size, 'attack_rates wrong size'
         assert (k >= 0 and  k < self.size), 'index k is out of range'
         assert np.sum(attack_rates >= 0.0) == self.size, 'negative attack_rate'
-        a, attack_routing = AttackRoutingSolver(self, attack_rates, k, full_adj, 
+        a, attack_routing = AttackRoutingSolver(self, attack_rates, k, full_adj,
                                         omega, eps, cplex).solve()
         # update the network
         self.update(attack_rates, attack_routing)
@@ -276,7 +276,7 @@ class Network:
 
 def load_network(file_path):
     # generate MAS network from file
-    data = scipy.io.loadmat(file_path)
+    data = pickle.load(open(file_path))
     # num1 = (20 if someBoolValue else num1)
     adjacency = data['adj'] if 'adj' in data else None
     network = Network(np.squeeze(data['lam']), data['p'], data['T'], adjacency)

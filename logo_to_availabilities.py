@@ -48,4 +48,4 @@ def get_availabilities(station_names):
     return np.array(map(get_avail, station_names))
 
 if __name__ == '__main__':
-    test_image_matrix(sio.loadmat('data/queueing_params.mat')['stations'])
+    test_image_matrix(pickle.load(open('data/queueing_params.pkl'))['stations'])

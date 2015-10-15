@@ -43,3 +43,6 @@ SMOOTHING_FACTOR = 1
 
 # The delta coordinates used in smoothing of T
 DELTAS = [(i, j) for i in [-1,0,1] for j in [-1,0,1]]
+
+# Minumum number of arrivals in a cluster
+CLUSTER_FACTOR = 100000
