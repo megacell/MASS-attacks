@@ -239,5 +239,17 @@ class TestMasNetwork(unittest.TestCase):
                                  network.get_adjacencies(2).flatten()))
 
 
+    def test_sparsify_routing(self):
+        nw = MAS.load_network(MAT_FILE)
+        nw.balance()
+        nw.combine()
+        print np.sum(nw.routing > 0.0)
+        self.assertTrue(np.sum(np.sum(nw.routing, axis=1)) == nw.size)
+        nw.sparsify_routing(0.8)
+        print np.sum(nw.routing > 0.0)
+        self.assertTrue(np.sum(np.sum(nw.routing, axis=1)) == nw.size)
+
+
+
 if __name__ == '__main__':
     unittest.main()
