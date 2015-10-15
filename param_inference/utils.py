@@ -41,6 +41,10 @@ class RBins:
         '''Lower left coord'''
         return self.inv_trans(nx * self.binsize, ny * self.binsize)
 
+    def get_center(self, nx, ny):
+        '''Center of box'''
+        return self.get_coord(nx + 0.5, ny + 0.5)
+
     def get_poly(self, nx, ny):
         c = self.get_coord
         return [c(nx, ny), c(nx + 1, ny), c(nx + 1, ny + 1), c(nx, ny + 1)]
@@ -73,7 +77,14 @@ class FeatureCollection:
 
     def add_polygon(self, points, props=None):
         self.add({'type' : 'Polygon',
-                  'coordinates': [points + [points[0]]]}, props or {})
+                  'coordinates': [points + [points[0]]]},
+                 props or {})
+
+    def add_point(self, point, props=None):
+        self.add({'type' : 'Point',
+                  'coordinates': point},
+                 props or {})
+
 
     def deepcopy(self):
         fc = FeatureCollection()
