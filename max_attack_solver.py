@@ -88,6 +88,7 @@ class MaxAttackSolver:
         non_zeros = np.where(sols)
         flow = np.zeros((self.N,self.N))
         for i in non_zeros[0]:
+            if variables[i][0] == 'n': continue
             a,b = [int(j) for j in variables[i][2:].split('_')]
             flow[a,b] = sols[i]
         return flow
@@ -145,7 +146,8 @@ class MaxAttackSolver:
             eqn = ' + '.join(['x_{}_{}'.format(i,j)
                                 for j in range(i) + range(i+1, N)
                                 if self.adj[i,j] == 1.])
-            end = '- {} n_{} = 0.0'.format(self.a[i])
+            a = self.a
+            end = '- {} n_{} = 0.0'.format(self.a[i], i)
             cst2.append(eqn + end)
         # budget constraint
         bdg = ' + '.join(['n_{}' for i in range(N)]) + ' <= {}'.format(self.b)
@@ -153,5 +155,5 @@ class MaxAttackSolver:
 
         # bounds
         bnd2 = '\n '.join(['0 <= n_{}'.format(i) for i in range(N)])
-        bnd = bn1 + '\n  ' + bnd2
+        bnd = bnd1 + '\n  ' + bnd2
         return obj, cst, bnd
