@@ -11,7 +11,7 @@ __author__ = 'yuanchenyang', 'jeromethai'
 
 from pdb import set_trace as T
 
-MAT_FILE = 'data/queueing_params.pkl'
+MAT_FILE = 'data/queueing_params_no_cluster.pkl'
 
 def cal_logo_experiment(adj):
     nw = load_network(MAT_FILE)
@@ -38,15 +38,16 @@ def cal_logo_draw(adj):
     bal_rates, bal_routing = nw.balance()
     nw.combine()
 
-    nw.update_adjacency(adj)
-    att_rates, att_routing = nw.min_attack(target, full_adj=False)
+    if adj:
+        nw.update_adjacency(adj)
+    att_rates, att_routing = nw.min_attack(target, full_adj=(adj == 0))
 
     print 'Passenger Arrival Rate:', np.sum(nw.rates)
     print 'Balance Cost: ', np.sum(bal_rates)
     print 'Attack After Balance Cost (adjacency {}): {}'.format(adj, np.sum(att_rates))
 
     draw_rates('logo_rates.geojson', mat, att_rates)
-    draw_routing('logo_routing.geojson', mat, att_rates, att_routing)
+    draw_routing('logo_routing.geojson', mat, att_rates, att_routing, normalize=True)
     draw_availabilities('logo_avail.geojson', mat, nw.new_availabilities())
 
 def optimal_attack_full_network():
@@ -152,7 +153,7 @@ def draw_availabilities(outfile, mat, avails):
     fc.dump(outfile)
 
 
-def draw_routing(outfile, mat, rates, routing):
+def draw_routing(outfile, mat, rates, routing, normalize=False):
     fc = FeatureCollection()
     stations = map(get_xy, mat['stations'])
     counter = 0
@@ -162,8 +163,13 @@ def draw_routing(outfile, mat, rates, routing):
             if prob > 0:
                 delta = np.array(rbs.get_center(ex, ey)) - np.array(rbs.get_center(sx, sy))
                 total = total + rate * prob * delta / np.linalg.norm(delta)
-        if (total[0] + total[1]) > 0:
+
+        norm = np.linalg.norm(total)
+        if norm > 0:
+            if normalize:
+                total = total / np.linalg.norm(total)
             counter += 1
+
         fc.add_point(rbs.get_center(sx, sy), {'u': total[0], 'v': total[1]})
 
     #fc.add_point(rbs.get_center(0, 0), {'u': 1, 'v': 1})
@@ -185,26 +191,27 @@ def run_jerome():
 
 
 def run_chenyang():
-        # k = 86 for grand central terminal, and k = 302 for a section with small lam
-    # cal_logo_experiment(range(1, 15))
+    # k = 86 for grand central terminal, and k = 302 for a section with small lam
+    #
     # optimal_attack_full_network()
     # optimal_attack_with_radius(5)
     # network_simulation()
 
-    #cal_logo_draw(1)
+    cal_logo_draw(11)
+    #cal_logo_experiment(range(1, 15))
 
     #optimal_attack_with_max_throughput()
     #optimal_attack_with_radius(10, save_to='tmp1.pkl')
     #optimal_attack_with_regularization(omega=0.1, ridge=0.01)
 
-    mat = pickle.load(open(MAT_FILE))
-    saved = pickle.load(open('tmp1.pkl'))
-    rates, routing, avails = saved['rates'], saved['routing'], saved['avails']
-    draw_rates('rates.geojson', mat, rates)
-    draw_routing('routing.geojson', mat, rates, routing)
-    draw_availabilities('avails.geojson', mat, avails)
+    #mat = pickle.load(open(MAT_FILE))
+    #saved = pickle.load(open('tmp1.pkl'))
+    #rates, routing, avails = saved['rates'], saved['routing'], saved['avails']
+    #draw_rates('rates.geojson', mat, rates)
+    #draw_routing('routing.geojson', mat, rates, routing)
+    #draw_availabilities('avails.geojson', mat, avails)
 
 
 if __name__ == '__main__':
-    run_jerome()
-    # run_chenyang()
+    # run_jerome()
+    run_chenyang()
