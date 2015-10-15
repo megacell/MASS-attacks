@@ -23,6 +23,8 @@ class AttackRateSolver:
         self.nu = nu_init # nu_init is the initial rate of 
         self.nu_less_k = np.delete(nu_init, k)
         self.omega = omega
+        if isinstance(ridge, int) or isinstance(ridge, float): 
+            ridge = ridge * np.ones((network.size,))
         self.ridge = ridge
         self.eps = eps
         self.N = network.size
@@ -52,6 +54,8 @@ class AttackRateSolver:
         assert is_equal(np.sum(self.kappa, axis=1), 1.0, self.eps), \
             'attack_routing not stochastic {}'.format(np.sum(self.kappa, axis=1))
         self.check_nu(self.nu)
+        assert np.min(self.ridge) >= 0.0
+
 
 
     def check_nu(self, nu):
@@ -104,7 +108,7 @@ class AttackRateSolver:
             # remove k-th entry because a_k is set to 1 and solve the equations
             jacobian.append(np.linalg.solve(A, np.delete(b, self.k)))
         g = np.dot(np.array(jacobian), self.w_less_k - self.omega * self.nu_less_k)
-        g = g - self.omega * a
+        g = g - self.omega * a + np.multiply(self.ridge, self.nu)
         return g
 
 

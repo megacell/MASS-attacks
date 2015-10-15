@@ -21,6 +21,8 @@ class OptimalAttackSolver:
         self.omega = omega
         self.N = network.size
         self.omega = omega # term to maximize throughput
+        if isinstance(ridge, int) or isinstance(ridge, float): 
+            ridge = ridge * np.ones((network.size,))
         self.ridge = ridge # l2-regularization on the attack_rates
         self.eps = eps
         self.cplex = cplex
@@ -33,7 +35,8 @@ class OptimalAttackSolver:
     def objective(self, a, nu):
         obj = np.sum(np.multiply(self.w, a))
         thru = 0.0 if nu is None else np.sum(np.multiply(nu, a))
-        return (obj, thru)
+        reg = 0.0 if nu is None else 0.5 * np.sum(np.multiply(self.ridge, np.square(nu)))
+        return (obj, thru, reg)
 
 
     def solve(self, alpha=10., beta=1., max_iters_attack_rate=5, split_budget=False):
@@ -73,7 +76,7 @@ class OptimalAttackSolver:
             if not full_adj: assert network.verify_adjacency() == True
             print self.objective(network.new_availabilities(), network.attack_rates)
             network.opt_attack_rate(network.attack_routing, k, network.attack_rates, \
-                    alpha, beta, max_iters_attack_rate, omega, eps)
+                    alpha, beta, max_iters_attack_rate, omega, ridge, eps)
             print '============= after opt_attack_rate ============='
             if not full_adj: assert network.verify_adjacency() == True
             print self.objective(network.new_availabilities(), network.attack_rates)
