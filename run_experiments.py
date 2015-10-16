@@ -11,8 +11,8 @@ __author__ = 'yuanchenyang', 'jeromethai'
 
 from pdb import set_trace as T
 
-#MAT_FILE = 'data/queueing_params.pkl'
-MAT_FILE = 'data/queueing_params_no_cluster.pkl'
+MAT_FILE = 'data/queueing_params.pkl'
+#MAT_FILE = 'data/queueing_params_no_cluster.pkl'
 
 def cal_logo_experiment(adj):
     nw = load_network(MAT_FILE)
@@ -84,7 +84,7 @@ def optimal_attack_with_radius(r, save_to=None):
 
 
 def save_results(nw, save_to, just_rates=False):
-    rates = nw.attack_rates / (nw.attack_rates + nw.rates)
+    rates = nw.rates
     obj = {'rates': rates,
            'routing': nw.attack_routing,
            'times': nw.travel_times,
@@ -175,6 +175,7 @@ def draw_routing(outfile, mat, rates, routing, normalize=False):
 def draw_network(filename='tmp1.pkl', normalize=False):
     mat = pickle.load(open(MAT_FILE))
     saved = pickle.load(open(filename))
+    T()
     rates, routing, avails = saved['rates'], saved['routing'], saved['avails']
     draw_rates('rates.geojson', mat, rates)
     draw_routing('routing.geojson', mat, rates, routing, normalize=normalize)
@@ -184,6 +185,7 @@ def draw_network(filename='tmp1.pkl', normalize=False):
 def optimal_attack_with_regularization(omega, ridge, budget,\
                       save_to='tmp1.pkl', iters=3, r=None):
     nw = load_network(MAT_FILE)
+    real_rates = nw.rates.tolist()
     #nw.rates = nw.rates + 50.*np.ones((nw.size,))
     nw.set_weights_to_min_time_usage()
     nw.balance()
@@ -194,7 +196,9 @@ def optimal_attack_with_regularization(omega, ridge, budget,\
     nw.optimal_attack(omega=omega, ridge=ridge, max_iters=iters, \
                         alpha=10., beta=1., max_iters_attack_rate=5, \
                         k=k, full_adj=(r is None))
-    save_results(nw, save_to)
+    save_results(nw, save_to + '.real')
+    nw.combine()
+    save_total_results(nw, real_rates, save_to)
 
 def attack():
     max_iters=3
@@ -228,10 +232,32 @@ def run_jerome():
     # omega=100., ridge=0.1, bdg=100 -> obj: 1093/4670, bdg: 100/100, thru: 23
     # omega=100., ridge=10., bdg=1000 -> obj: 212/4670, bdg: 1000/1000, thru: 42
     # omega=1000., ridge=1000, bdg=1000 -> obj: 222/4670, bdg: 980/1000, thru: 43
-    optimal_attack_with_regularization(omega=1000., ridge=.1, budget=1000.0)
+    
+    # this works with max attack
+    # optimal_attack_with_regularization(omega=100., ridge=.1, budget=1000.0)
+    
+    optimal_attack_with_regularization(omega=0., ridge=.1, budget=100.0, save_to='output/attack_100.pkl')
+    # optimal_attack_with_regularization(omega=0., ridge=.1, budget=200.0, save_to='output/attack_200.pkl')
+    # optimal_attack_with_regularization(omega=0., ridge=.1, budget=500.0, save_to='output/attack_500.pkl')
+    optimal_attack_with_regularization(omega=0., ridge=.1, budget=1000.0, save_to='output/attack_1000.pkl')
+    # optimal_attack_with_regularization(omega=0., ridge=.01, budget=2000.0, save_to='output/attack_2000.pkl')
+    # optimal_attack_with_regularization(omega=0., ridge=.01, budget=5000.0, save_to='output/attack_5000.pkl')
+    # optimal_attack_with_regularization(omega=0., ridge=.01, budget=10000.0, save_to='output/attack_10000.pkl')
+    # optimal_attack_with_regularization(omega=0., ridge=.01, budget=1500.0, save_to='output/attack_1500.pkl')
+    # optimal_attack_with_regularization(omega=0., ridge=.01, budget=2500.0, save_to='output/attack_2500.pkl')
+    # optimal_attack_with_regularization(omega=0., ridge=.01, budget=3000.0, save_to='output/attack_3000.pkl')
+    # optimal_attack_with_regularization(omega=0., ridge=.01, budget=4000.0, save_to='output/attack_4000.pkl')
+    # optimal_attack_with_regularization(omega=0., ridge=.01, budget=6000.0, save_to='output/attack_6000.pkl')
+    # optimal_attack_with_regularization(omega=0., ridge=.01, budget=7000.0, save_to='output/attack_7000.pkl')
+    # optimal_attack_with_regularization(omega=0., ridge=.01, budget=8000.0, save_to='output/attack_8000.pkl')
+    # optimal_attack_with_regularization(omega=0., ridge=.01, budget=9000.0, save_to='output/attack_9000.pkl')
+
+
     #optimal_attack_with_regularization(max_iters=5, omega=10., ridge=0.1, \
     #    save_to='tmp1.pkl', r=3)
-    draw_network()
+    #draw_network(filename='output/attack_100.pkl.real', normalize=True)
+
+    draw_network(filename='output/attack_1000.pkl.real', normalize=True)
 
 def run_chenyang():
     # k = 86 for grand central terminal, and k = 302 for a section with small lam
@@ -263,5 +289,5 @@ def run_chenyang():
 
 
 if __name__ == '__main__':
-    #run_jerome()
-    run_chenyang()
+    run_jerome()
+    #run_chenyang()

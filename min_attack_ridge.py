@@ -56,7 +56,7 @@ class MinAttackRidge:
         pickup_rates = np.multiply(self.phi, self.a)
         self.source = pickup_rates - np.dot(self.delta.transpose(), pickup_rates)
         assert abs(np.sum(self.source)) < self.eps
-        inverse_a = np.divide(np.ones((self.N,)), self.a)
+        self.inverse_a = np.divide(np.ones((self.N,)), self.a)
         self.coef_ridge = np.divide(self.ridge, np.square(self.a))
         self.coef_cost = np.divide(self.cost, self.a)
 
@@ -94,7 +94,7 @@ class MinAttackRidge:
     def cplex_solver(self):
         open('tmp.lp', 'w').write(self.to_cplex_qp_file())
         "solver to be feeded to CPLEX for max_attack"
-        variables, sols = cplex_interface.solve_qp_from_file('tmp.lp', 'o')
+        variables, sols = cplex_interface.solve_from_file('tmp.lp', 'o')
         non_zeros = np.where(sols)
         flow = np.zeros((self.N,self.N))
         for i in non_zeros[0]:
@@ -105,19 +105,20 @@ class MinAttackRidge:
         return flow
 
 
-    def to_cplex_qp_file_deprecated(self):
+    def to_cplex_qp_file(self):
         N = self.N
         # objective
         obj1 = ' + '.join(['{} x_{}_{}'.format(self.coef_cost[i], i, j)
                             for i in range(N)
                             for j in range(i) + range(i+1,N)
                             if self.adj[i,j] > 0.0])
-        obj2 = ' + '.join(['{} x_{}_{} * x_{}_{}'.format(self.coef_ridge[i], i, j, i, k)
-                            for i in range(N)
-                            for j in range(i) + range(i+1,N)
-                            for k in range(i) + range(i+1,N)
-                            if self.adj[i,j] > 0.0 and self.adj[i,k] > 0.0])
-        obj = '{} + [ {} ] / 2'.format(obj1, obj2)
+        # obj2 = ' + '.join(['{} x_{}_{} * x_{}_{}'.format(self.coef_ridge[i], i, j, i, k)
+        #                     for i in range(N)
+        #                     for j in range(i) + range(i+1,N)
+        #                     for k in range(i) + range(i+1,N)
+        #                     if self.adj[i,j] > 0.0 and self.adj[i,k] > 0.0])
+        # obj = '{} + [ {} ] / 2'.format(obj1, obj2)
+        obj = obj1
         # equality constraints
         cst1 = '\n  '.join(['+'.join(['x_{}_{} - x_{}_{}'.format(j, i, i, j)
                              for j in range(i) + range(i+1, N)
@@ -140,7 +141,7 @@ class MinAttackRidge:
 
 
 
-    def to_cplex_lp_file(self):
+    def to_cplex_lp_file_deprecated(self):
         N = self.N
         # Objective
         obj1 = ' + '.join(['{} n_{}'.format(self.cost[i], i) for i in range(N)])

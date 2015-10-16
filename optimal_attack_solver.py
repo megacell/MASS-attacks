@@ -98,7 +98,8 @@ class OptimalAttackSolver:
 
             self.status(i, 'optimal_attack_routing')
             # apply maximum throughput attack
-            network.max_attack(network.new_availabilities(), ridge, full_adj, eps)
+            network.min_attack(network.new_availabilities(), full_adj)
+            # network.max_attack(network.new_availabilities(), ridge, full_adj, eps)
             self.status(i, 'maximum_throughput_attack')
             # apply optimal attack rate
             network.opt_attack_rate(network.attack_routing, k, network.attack_rates, \
@@ -107,6 +108,6 @@ class OptimalAttackSolver:
             self.status(i, 'optimal_attack_rate')
         print '\n'.join(self.messages)
         print sorted(network.attack_rates)
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         #print network.attack_routing
         print 'generating visualization ...'

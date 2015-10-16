@@ -155,6 +155,7 @@ class Network:
         return opt_rates, opt_routing
 
 
+
     def update(self, attack_rates, attack_routing):
         # update new_rates and new_routing given attack rates and routing
         self.attack_rates = attack_rates
