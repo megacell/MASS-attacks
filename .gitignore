@@ -17,9 +17,9 @@ __pycache__
 # Project specific
 *.geojson
 /param_inference/data/*
-/param_inference/queueing_params.mat
 data/*
 !data/.gitkeep
 *.lp
 *.qml
-/param_inference/queueing_params.pkl
+*.pkl
+*.mat

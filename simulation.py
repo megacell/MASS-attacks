@@ -72,13 +72,14 @@ class RoadNode(Node):
         return self.rid
 
 class StationNode(Node):
-    def __init__(self, id, n, mu, r):
+    def __init__(self, id, n, mu, r, real_rate):
         '''
         r     : Routing probability, dict from node id to probability
         '''
         Node.__init__(self, id, n, mu)
         check_dist(r)
         self.r = r
+        self.real_rate = real_rate
 
     def service_rate(self):
         return self.mu
@@ -87,7 +88,7 @@ class StationNode(Node):
         return sample(self.r)
 
 class Network:
-    def __init__(self, n, lam, T, p, k):
+    def __init__(self, n, lam, T, p, k, real_rates):
         '''Creates a network of n nodes with the following parameters
 
         n   : Number of nodes
@@ -102,14 +103,16 @@ class Network:
 
         self.graph = {}
         self.t = 0
+        self.station_lost = 0
         for i in range(n):
             r = {}
             for j in range(n):
-                if i != j:
+                if i != j and p[i][j] > 0:
                     rn_name = from_to(i, j)
                     self.add_node(RoadNode(rn_name, 0, T[i][j], j))
                     r[rn_name] = p[i][j]
-            self.add_node(StationNode(i, k[i], lam[i], r))
+            self.add_node(StationNode(i, k[i], lam[i], r, real_rates[i]))
+        self.real_lost = 0
         self.history = []
 
     def add_node(self, node):
@@ -184,6 +187,11 @@ class Network:
         if update_node.n == 0:
             # Passenger lost
             update_node.lost += 1
+            if isinstance(update_node, StationNode):
+                self.station_lost += 1
+                real = update_node.real_rate
+                virtual = update_node.mu - real
+                self.real_lost += 1 if random.random() > real / (real + virtual) else 0
             return
         update_node.add(-1)
 

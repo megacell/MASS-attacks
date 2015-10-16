@@ -83,11 +83,20 @@ def optimal_attack_with_radius(r, save_to=None):
     save_results(nw, save_to)
 
 
-def save_results(nw, save_to):
+def save_results(nw, save_to, just_rates=False):
     rates = nw.attack_rates / (nw.attack_rates + nw.rates)
     obj = {'rates': rates,
            'routing': nw.attack_routing,
+           'times': nw.travel_times,
            'avails': nw.new_availabilities()}
+    pickle.dump(obj, open(save_to, 'wb'))
+
+def save_total_results(nw, real_rates, save_to):
+    obj = {'rates': nw.rates.tolist(),
+           'real_rates': real_rates,
+           'routing': nw.routing.tolist(),
+           'times': nw.travel_times.tolist(),
+           'avails': nw.new_availabilities().tolist()}
     pickle.dump(obj, open(save_to, 'wb'))
 
 
@@ -101,20 +110,6 @@ def optimal_attack_with_max_throughput():
     nw.optimal_attack(omega=0.0, max_iters=3, alpha=10., beta=1., \
                 max_iters_attack_rate=5, k=k)
 
-
-
-def network_simulation():
-    nw = load_network(MAT_FILE)
-    target = get_availabilities(nw.station_names)
-
-    bal_rates, bal_routing = nw.balance()
-    nw.combine()
-
-    n = Network(nw.size, nw.rates, nw.travel_times, nw.routing, [20]* nw.size)
-    for i in range(100):
-        if i % 10 == 0:
-            print i
-        n.jump()
 
 
 def draw_rates(outfile, mat, rates):
@@ -187,7 +182,6 @@ def draw_network(filename, normalize=False):
 
 def optimal_attack_with_regularization(max_iters, omega, ridge, save_to, r=None):
     nw = load_network(MAT_FILE)
-    T()
     #nw.rates = nw.rates + 50.*np.ones((nw.size,))
     nw.set_weights_to_min_time_usage()
     nw.balance()
@@ -200,15 +194,40 @@ def optimal_attack_with_regularization(max_iters, omega, ridge, save_to, r=None)
                         k=k, full_adj=(r is None))
     save_results(nw, save_to)
 
+def attack():
+    max_iters=3
+    omega=1000.
+    ridge=0.1
+    r = None
+    nw = load_network(MAT_FILE)
+    real_rates = nw.rates.tolist()
+    nw.set_weights_to_min_time_usage()
+    nw.balance()
+    nw.combine()
+    nw.budget = 1000.0
+    k=86
+    if r is not None: nw.update_adjacency(r)
+    nw.optimal_attack(omega=omega, ridge=ridge, max_iters=max_iters, \
+                        alpha=10., beta=1., max_iters_attack_rate=5, \
+                        k=k, full_adj=(r is None))
+    nw.combine()
+    save_total_results(nw, real_rates, 'attack_1000.pkl')
+
+def balance():
+    nw = load_network(MAT_FILE)
+    real_rates = nw.rates.tolist()
+    nw.set_weights_to_min_time_usage()
+    nw.balance()
+    nw.combine()
+    save_total_results(nw, real_rates, 'balanced.pkl')
 
 def run_jerome():
     # ridge = [0.01, 0.1]
     #optimal_attack_with_regularization(max_iters=5, omega=1000., ridge=0.1, \
     #    save_to='tmp1.pkl')
     optimal_attack_with_regularization(max_iters=5, omega=1000., ridge=0.1, \
-        save_to='tmp1.pkl', r=3)
+        save_to='tmp1.pkl')
     draw_network('tmp1.pkl')
-
 
 def run_chenyang():
     # k = 86 for grand central terminal, and k = 302 for a section with small lam
@@ -217,9 +236,12 @@ def run_chenyang():
     # optimal_attack_with_radius(5)
     # network_simulation()
 
-    optimal_attack_with_regularization(max_iters=5, omega=1000., ridge=0.01,
-                                       save_to='tmp1.pkl', r=None)
-    draw_network('tmp1.pkl', normalize=True)
+    #balance()
+    attack()
+
+    # optimal_attack_with_regularization(max_iters=5, omega=1000., ridge=0.01,
+    #                                    save_to='tmp1.pkl', r=None)
+    # draw_network('tmp1.pkl', normalize=True)
 
     #cal_logo_draw(7)
     #cal_logo_experiment(range(1, 15))
@@ -237,5 +259,5 @@ def run_chenyang():
 
 
 if __name__ == '__main__':
-    run_jerome()
-    # run_chenyang()
+    #run_jerome()
+    run_chenyang()
