@@ -13,7 +13,7 @@ __author__ = 'jeromethai'
 
 class AttackRoutingSolver:
     # class for computing the best attacks with the rate of attacks fixed
-    def __init__(self, network, attack_rates, k, full_adj=True, omega=0, eps=1e-8, cplex=True):
+    def __init__(self, network, attack_rates, k, full_adj=True, omega=0.0, eps=1e-8, cplex=True):
         self.network = network
         self.nu = attack_rates # fixed attack rate
         self.phi = self.network.rates # rates before the attacks

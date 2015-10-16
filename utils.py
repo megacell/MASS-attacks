@@ -64,6 +64,12 @@ def ball1_projection(v, z=1):
     return simplex_projection(v, z)
 
 
+def renormalize_matrix(A):
+    N = A.shape[0]
+    tmp = np.divide(np.ones((N,)), np.sum(A, axis=1))
+    return np.dot(np.diag(tmp), A)
+
+
 def simplex_projection(v, z=1):
     ''' Projects vector v of dimension n onto the n-dimensional simplex
 

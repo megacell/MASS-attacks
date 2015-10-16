@@ -3,7 +3,8 @@
 
 import numpy as np
 import pickle
-from utils import is_equal, pi_2_a, r_2_pi, norm_adjacencies
+from utils import is_equal, pi_2_a, r_2_pi, norm_adjacencies, \
+                    renormalize_matrix, ball1_projection
 # attack solvers
 from attack_rate_solver import AttackRateSolver
 from min_attack_solver import MinAttackSolver
@@ -11,6 +12,7 @@ from attack_routing_solver import AttackRoutingSolver
 from single_destination_attack import SingleDestinationAttack
 from optimal_attack_solver import OptimalAttackSolver
 from max_attack_solver import MaxAttackSolver
+from min_attack_ridge import MinAttackRidge
 
 __author__ = 'jeromethai'
 
@@ -86,8 +88,11 @@ class Network:
 
 
     def re_normalize_attack_routing(self):
-            tmp = np.divide(np.ones((self.size,)), np.sum(self.attack_routing, axis=1))
-            self.attack_routing = np.dot(np.diag(tmp), self.attack_routing)
+        self.attack_routing = renormalize_matrix(self.attack_routing)
+
+
+    def re_normalize_routing(self):
+        self.routing = renormalize_matrix(self.routing)
 
 
     def set_weights_to_min_time_usage(self):
@@ -137,6 +142,15 @@ class Network:
         cost = np.ones((self.size, self.size))
         opt_rates, opt_routing = MinAttackSolver(self, target, cost, full_adj=full_adj, eps=eps, cplex=cplex).solve()
         # update the network
+        self.update(opt_rates, opt_routing)
+        return opt_rates, opt_routing
+
+
+    def min_attack_ridge(self, target, cost, ridge, full_adj=True, eps=1e-8):
+        assert np.max(target) == 1.0, 'max(target) > 1.0'
+        assert np.min(target) >= eps, 'target not positive'        
+        opt_rates, opt_routing = MinAttackRidge(self, target, cost, ridge, \
+                   full_adj=full_adj, eps=eps).solve()
         self.update(opt_rates, opt_routing)
         return opt_rates, opt_routing
 
@@ -272,6 +286,13 @@ class Network:
         # update the network
         self.update(opt_rates, opt_routing)
         return opt_rates, opt_routing
+
+
+    def sparsify_routing(self, thres):
+        # trim the each row such that the sum is thres via l1-ball projection
+        for i in range(self.size):
+            self.routing[i,:] = ball1_projection(self.routing[i,:], z=thres)
+            self.re_normalize_routing()
 
 
 def load_network(file_path):

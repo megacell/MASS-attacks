@@ -11,8 +11,8 @@ __author__ = 'yuanchenyang', 'jeromethai'
 
 from pdb import set_trace as T
 
-MAT_FILE = 'data/queueing_params.pkl'
-#MAT_FILE = 'data/queueing_params_no_cluster.pkl'
+#MAT_FILE = 'data/queueing_params.pkl'
+MAT_FILE = 'data/queueing_params_no_cluster.pkl'
 
 def cal_logo_experiment(adj):
     nw = load_network(MAT_FILE)
@@ -171,7 +171,8 @@ def draw_routing(outfile, mat, rates, routing, normalize=False):
     # fc.add_point(rbs.get_center(0, 0), {'u': dxy[0], 'v': dxy[1]})
     fc.dump(outfile)
 
-def draw_network(filename, normalize=False):
+
+def draw_network(filename='tmp1.pkl', normalize=False):
     mat = pickle.load(open(MAT_FILE))
     saved = pickle.load(open(filename))
     rates, routing, avails = saved['rates'], saved['routing'], saved['avails']
@@ -180,16 +181,17 @@ def draw_network(filename, normalize=False):
     draw_availabilities('avails.geojson', mat, avails)
 
 
-def optimal_attack_with_regularization(max_iters, omega, ridge, save_to, r=None):
+def optimal_attack_with_regularization(omega, ridge, budget,\
+                      save_to='tmp1.pkl', iters=3, r=None):
     nw = load_network(MAT_FILE)
     #nw.rates = nw.rates + 50.*np.ones((nw.size,))
     nw.set_weights_to_min_time_usage()
     nw.balance()
     nw.combine()
-    nw.budget = 1000.0
+    nw.budget = budget
     k=86
     if r is not None: nw.update_adjacency(r)
-    nw.optimal_attack(omega=omega, ridge=ridge, max_iters=max_iters, \
+    nw.optimal_attack(omega=omega, ridge=ridge, max_iters=iters, \
                         alpha=10., beta=1., max_iters_attack_rate=5, \
                         k=k, full_adj=(r is None))
     save_results(nw, save_to)
@@ -222,12 +224,14 @@ def balance():
     save_total_results(nw, real_rates, 'balanced.pkl')
 
 def run_jerome():
-    # ridge = [0.01, 0.1]
-    #optimal_attack_with_regularization(max_iters=5, omega=1000., ridge=0.1, \
-    #    save_to='tmp1.pkl')
-    optimal_attack_with_regularization(max_iters=5, omega=1000., ridge=0.1, \
-        save_to='tmp1.pkl')
-    draw_network('tmp1.pkl')
+    # omega=100., ridge=0.1, bdg=1000 -> obj: 188/4670, bdg: 1000/1000, thru: 43
+    # omega=100., ridge=0.1, bdg=100 -> obj: 1093/4670, bdg: 100/100, thru: 23
+    # omega=100., ridge=10., bdg=1000 -> obj: 212/4670, bdg: 1000/1000, thru: 42
+    # omega=1000., ridge=1000, bdg=1000 -> obj: 222/4670, bdg: 980/1000, thru: 43
+    optimal_attack_with_regularization(omega=1000., ridge=.1, budget=1000.0)
+    #optimal_attack_with_regularization(max_iters=5, omega=10., ridge=0.1, \
+    #    save_to='tmp1.pkl', r=3)
+    draw_network()
 
 def run_chenyang():
     # k = 86 for grand central terminal, and k = 302 for a section with small lam

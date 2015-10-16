@@ -57,7 +57,6 @@ class AttackRateSolver:
         assert np.min(self.ridge) >= 0.0
 
 
-
     def check_nu(self, nu):
         # check if the attack_rates 'nu'
         assert nu.shape[0] == self.N, 'attack rates is not network size'
@@ -86,7 +85,9 @@ class AttackRateSolver:
         a = pi_2_a(pi, lam)
         # compute the objective
         obj = np.sum(np.multiply(self.w, a))
-        return obj, a
+        thru = self.omega * np.sum(np.multiply(nu, a))
+        reg = 0.5 * np.sum(np.multiply(self.ridge, np.square(nu)))
+        return obj+thru+reg, a
 
 
     def gradient(self):
@@ -131,7 +132,6 @@ class AttackRateSolver:
             obj, a = self.objective(nu)
         if t <= epsilon: t = 0.0
         return t
-
 
 
     def solve(self, step, stop):
