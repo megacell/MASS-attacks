@@ -12,6 +12,7 @@ from attack_routing_solver import AttackRoutingSolver
 from single_destination_attack import SingleDestinationAttack
 from optimal_attack_solver import OptimalAttackSolver
 from max_attack_solver import MaxAttackSolver
+from min_attack_ridge import MinAttackRidge
 
 __author__ = 'jeromethai'
 
@@ -141,6 +142,15 @@ class Network:
         cost = np.ones((self.size, self.size))
         opt_rates, opt_routing = MinAttackSolver(self, target, cost, full_adj=full_adj, eps=eps, cplex=cplex).solve()
         # update the network
+        self.update(opt_rates, opt_routing)
+        return opt_rates, opt_routing
+
+
+    def min_attack_ridge(self, target, cost, ridge, full_adj=True, eps=1e-8):
+        assert np.max(target) == 1.0, 'max(target) > 1.0'
+        assert np.min(target) >= eps, 'target not positive'        
+        opt_rates, opt_routing = MinAttackRidge(self, target, cost, ridge, \
+                   full_adj=full_adj, eps=eps).solve()
         self.update(opt_rates, opt_routing)
         return opt_rates, opt_routing
 

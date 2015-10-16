@@ -11,8 +11,8 @@ __author__ = 'yuanchenyang', 'jeromethai'
 
 from pdb import set_trace as T
 
-MAT_FILE = 'data/queueing_params.pkl'
-#MAT_FILE = 'data/queueing_params_no_cluster.pkl'
+#MAT_FILE = 'data/queueing_params.pkl'
+MAT_FILE = 'data/queueing_params_no_cluster.pkl'
 
 def cal_logo_experiment(adj):
     nw = load_network(MAT_FILE)
@@ -189,7 +189,7 @@ def draw_network(filename='tmp1.pkl', normalize=False):
 def optimal_attack_with_regularization(omega, ridge, budget,\
                       save_to='tmp1.pkl', iters=3, r=None):
     nw = load_network(MAT_FILE)
-    T()
+    #T()
     #nw.rates = nw.rates + 50.*np.ones((nw.size,))
     nw.set_weights_to_min_time_usage()
     nw.balance()
@@ -208,7 +208,7 @@ def run_jerome():
     # omega=100., ridge=0.1, bdg=100 -> obj: 1093/4670, bdg: 100/100, thru: 23
     # omega=100., ridge=10., bdg=1000 -> obj: 212/4670, bdg: 1000/1000, thru: 42
     # omega=1000., ridge=1000, bdg=1000 -> obj: 222/4670, bdg: 980/1000, thru: 43
-    optimal_attack_with_regularization(omega=1000., ridge=10., budget=1000.0)
+    optimal_attack_with_regularization(omega=1000., ridge=.1, budget=1000.0)
     #optimal_attack_with_regularization(max_iters=5, omega=10., ridge=0.1, \
     #    save_to='tmp1.pkl', r=3)
     draw_network()

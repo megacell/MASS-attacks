@@ -7,6 +7,9 @@ import numpy as np
 from utils import generate_uniform, generate_asymmetric, is_equal
 import pickle as pkl
 import os.path
+from logo_to_availabilities import get_availabilities
+from run_experiments import draw_network, save_results
+
 
 __author__ = 'jeromethai'
 
@@ -242,6 +245,7 @@ class TestMasNetwork(unittest.TestCase):
     def test_sparsify_routing(self):
         nw = MAS.load_network(MAT_FILE)
         nw.balance()
+        #import pdb; pdb.set_trace()
         nw.combine()
         print np.sum(nw.routing > 0.0)
         self.assertTrue(np.sum(np.sum(nw.routing, axis=1)) == nw.size)
@@ -250,6 +254,17 @@ class TestMasNetwork(unittest.TestCase):
         self.assertTrue(np.sum(np.sum(nw.routing, axis=1)) == nw.size)
 
 
+    def test_min_attack_ridge(self, save_to='tmp1.pkl'):
+        nw = MAS.load_network('data/queueing_params_no_cluster.pkl')
+        target = get_availabilities(nw.station_names)
+        nw.budget = 1000.
+        nw.balance()
+        nw.combine()
+        nw.min_attack_ridge(target=target, cost=0.0, ridge=100.0)
+        save_results(nw, save_to)
+        print 'drawing network'
+        draw_network(save_to)
+        import pdb; pdb.set_trace()
 
 if __name__ == '__main__':
     unittest.main()

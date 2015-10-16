@@ -36,7 +36,6 @@ class MinAttackSolver:
         assert np.min(self.cost) >= self.eps, 'costs not positive'
 
 
-
     def min_cost_flow_init(self):
         print 'initialize paramaters of the LP ...'
         # produce the casting into a min-cost flow problem
