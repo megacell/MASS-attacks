@@ -1,10 +1,9 @@
 '''
-Minimum-cost-flow solver using cvxopt
 We refer to the following tutorial: http://cvxopt.org/examples/tutorial/lp.html
 '''
 
 import cplex_interface
-from cvxopt import matrix, spmatrix, sparse, solvers, spdiag
+# from cvxopt import matrix, spmatrix, sparse, solvers, spdiag
 import numpy as np
 
 __author__ = 'jeromethai'

@@ -5,7 +5,7 @@ Optimizing for the Optimal Attack problem with the rate of attacks 'nu' fixed
 
 
 import cplex_interface
-from cvxopt import matrix, spmatrix, sparse, spdiag, solvers
+# from cvxopt import matrix, spmatrix, sparse, spdiag, solvers
 import numpy as np
 
 __author__ = 'jeromethai'

@@ -259,7 +259,6 @@ class TestMasNetwork(unittest.TestCase):
         target = get_availabilities(nw.station_names)
         nw.budget = 1000.
         nw.balance()
-        import pdb; pdb.set_trace()
         # nw.combine()
         # nw.min_attack_ridge(target=target, cost=0.0, ridge=100.0)
         # save_results(nw, save_to)

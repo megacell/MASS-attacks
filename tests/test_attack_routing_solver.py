@@ -14,16 +14,16 @@ __author__ = 'jeromethai'
 class TestAttackRoutingSolver(unittest.TestCase):
     
 
-    def test_constraints(self):
-        # generate asymmetric network with availabilities = [ 0.5  0.5  1. ]
-        network = MAS.Network(*generate_asymmetric())
-        # an attack strategy that results in availabilities = [ 0.25  0.5   1. ]
-        attack_rates = np.array([1., 0., 0.])
-        attack_routing = np.array([[0., 0., 1.],[.5, 0., .5],[.5, .5, 0.]])
-        network.update(attack_rates, attack_routing)
-        # fix the availability at station 2 to be equal to 1
-        k = 2
-        b, A = AttackRoutingSolver(network, attack_rates, k).constraints()
+    # def test_constraints(self):
+    #     # generate asymmetric network with availabilities = [ 0.5  0.5  1. ]
+    #     network = MAS.Network(*generate_asymmetric())
+    #     # an attack strategy that results in availabilities = [ 0.25  0.5   1. ]
+    #     attack_rates = np.array([1., 0., 0.])
+    #     attack_routing = np.array([[0., 0., 1.],[.5, 0., .5],[.5, .5, 0.]])
+    #     network.update(attack_rates, attack_routing)
+    #     # fix the availability at station 2 to be equal to 1
+    #     k = 2
+    #     b, A = AttackRoutingSolver(network, attack_rates, k).constraints()
    
 
     def test_attack_routing_solver(self):
